@@ -7,11 +7,15 @@
     "test": "jest --verbose --silent=false",
     "ci-test": "jest --verbose",
     "lint": "eslint .",
+    "format": "prettier --write --ignore-unknown",
     "prepare": "husky",
     "dev": "ts-node-dev --no-notify --respawn --transpile-only -r tsconfig-paths/register src",
     "clean": "rm -rf dist",
     "build": "npx tsc",
     "start": "node dist/index.js"
+  },
+  "lint-staged": {
+    "**/*.{ts,js}": ["prettier --write --ignore-unknown", "eslint --cache --fix"]
   },
   "keywords": [],
   "author": "",
@@ -33,6 +37,7 @@
     "globals": "^15.7.0",
     "husky": "^9.0.11",
     "jest": "^29.7.0",
+    "lint-staged": "^15.2.7",
     "prettier": "3.3.2",
     "superagent": "^9.0.2",
     "supertest": "^7.0.0",
@@ -46,9 +51,5 @@
     "@types/supertest": "^6.0.2",
     "dotenv": "^16.4.5",
     "express": "^4.19.2"
-  },
-  "lint-staged": {
-    "*.js": "eslint --cache --fix",
-    "*.{js,css,md}": "prettier --write"
   }
 }

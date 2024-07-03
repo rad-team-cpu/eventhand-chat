@@ -15,7 +15,7 @@
     "start": "node dist/index.js"
   },
   "lint-staged": {
-    "**/*.ts": ["prettier --write --ignore-unknown", "eslint --cache --fix"]
+    "**/*.{ts,js}": ["prettier --write --ignore-unknown", "eslint --cache --fix"]
   },
   "keywords": [],
   "author": "",
@@ -51,9 +51,5 @@
     "@types/supertest": "^6.0.2",
     "dotenv": "^16.4.5",
     "express": "^4.19.2"
-  },
-  "lint-staged": {
-    "*.js": "eslint --cache --fix",
-    "*.{js,css,md}": "prettier --write"
   }
 }

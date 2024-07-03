@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "jest",
+    "test": "jest --verbose --silent=false",
+    "ci-test": "jest --verbose",
     "prepare": "husky",
     "dev": "ts-node-dev --no-notify --respawn --transpile-only -r tsconfig-paths/register src",
     "clean": "rm -rf dist",

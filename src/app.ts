@@ -1,12 +1,11 @@
-import express, {Express} from "express";
+import express, { Express } from 'express';
 
-import mainRouter from "@src/routes"
+import router from '@routes/index';
 
 const app: Express = express();
 
 app.use(express.json());
 
-
-app.use("/", mainRouter);
+app.use('/', router);
 
 export default app;

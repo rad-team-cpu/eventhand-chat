@@ -1,7 +1,8 @@
-import express, { Router, Request, Response } from "express";
+import healthCheck from '@src/controllers/healthCheck';
+import express, { Router } from 'express';
 
 const router: Router = express.Router();
 
-router.get('/', (req: Request, res: Response) => res.send('Hello Chat'));
+router.get('/', healthCheck);
 
-export default router
+export default router;

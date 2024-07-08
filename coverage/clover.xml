@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<coverage generated="1719981886512" clover="3.2.0">
-  <project timestamp="1719981886513" name="All files">
-    <metrics statements="10" coveredstatements="10" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1" elements="11" coveredelements="11" complexity="0" loc="10" ncloc="10" packages="2" files="2" classes="2"/>
+<coverage generated="1720421984893" clover="3.2.0">
+  <project timestamp="1720421984893" name="All files">
+    <metrics statements="21" coveredstatements="18" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2" elements="23" coveredelements="20" complexity="0" loc="21" ncloc="21" packages="3" files="3" classes="3"/>
     <package name="src">
       <metrics statements="6" coveredstatements="6" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
       <file name="app.ts" path="C:\SE\projects\eventhand-chat\src\app.ts">
@@ -14,14 +14,31 @@
         <line num="12" count="1" type="stmt"/>
       </file>
     </package>
-    <package name="src.routes">
-      <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
-      <file name="index.ts" path="C:\SE\projects\eventhand-chat\src\routes\index.ts">
-        <metrics statements="4" coveredstatements="4" conditionals="0" coveredconditionals="0" methods="1" coveredmethods="1"/>
-        <line num="1" count="1" type="stmt"/>
-        <line num="3" count="1" type="stmt"/>
+    <package name="src.controllers">
+      <metrics statements="10" coveredstatements="7" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+      <file name="healthCheck.ts" path="C:\SE\projects\eventhand-chat\src\controllers\healthCheck.ts">
+        <metrics statements="10" coveredstatements="7" conditionals="0" coveredconditionals="0" methods="2" coveredmethods="2"/>
+        <line num="2" count="1" type="stmt"/>
         <line num="5" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
         <line num="7" count="1" type="stmt"/>
+        <line num="13" count="1" type="stmt"/>
+        <line num="14" count="1" type="stmt"/>
+        <line num="16" count="0" type="stmt"/>
+        <line num="17" count="0" type="stmt"/>
+        <line num="18" count="0" type="stmt"/>
+        <line num="22" count="1" type="stmt"/>
+      </file>
+    </package>
+    <package name="src.routes">
+      <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+      <file name="index.ts" path="C:\SE\projects\eventhand-chat\src\routes\index.ts">
+        <metrics statements="5" coveredstatements="5" conditionals="0" coveredconditionals="0" methods="0" coveredmethods="0"/>
+        <line num="1" count="1" type="stmt"/>
+        <line num="2" count="1" type="stmt"/>
+        <line num="4" count="1" type="stmt"/>
+        <line num="6" count="1" type="stmt"/>
+        <line num="9" count="1" type="stmt"/>
       </file>
     </package>
   </project>

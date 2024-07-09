@@ -14,7 +14,7 @@ type Chat = {
 };
 
 const chatInputSchema = z.object({
-    _id: z.string().optional(),
+    _id: z.coerce.string().optional(),
     user: userInputSchema.optional(),
     vendor: vendorInputSchema.optional(),
     message: messageInputSchema,

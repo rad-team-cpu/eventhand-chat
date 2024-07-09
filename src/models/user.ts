@@ -6,8 +6,8 @@ type User = {
 };
 
 const userInputSchema = z.object({
-    _id: z.string(),
-    name: z.string(),
+    _id: z.coerce.string(),
+    name: z.coerce.string(),
 });
 
 type UserInput = z.infer<typeof userInputSchema>;

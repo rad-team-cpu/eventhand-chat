@@ -6,8 +6,8 @@ type Vendor = {
 };
 
 const vendorInputSchema = z.object({
-    _id: z.string(),
-    name: z.string(),
+    _id: z.coerce.string(),
+    name: z.coerce.string(),
 });
 
 type VendorInput = z.infer<typeof vendorInputSchema>;

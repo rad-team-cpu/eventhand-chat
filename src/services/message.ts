@@ -14,6 +14,8 @@ const createMessage = async (
         const document: Message = {
             _id: new ObjectId(),
             ...data,
+            createdAt: new Date(),
+            updatedAt: new Date(),
         };
 
         await collection.insertOne(document);

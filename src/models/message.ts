@@ -14,8 +14,6 @@ const messageInputSchema = z.object({
     senderId: z.coerce.string(),
     content: z.coerce.string(),
     timestamp: z.coerce.date(),
-    createdAt: z.coerce.date(),
-    updatedAt: z.coerce.date(),
 });
 
 type MessageInput = z.infer<typeof messageInputSchema>;

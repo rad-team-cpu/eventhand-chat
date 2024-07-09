@@ -44,6 +44,8 @@ const onListening = () => {
 httpServer.on('listening', onListening).on('error', onError);
 
 mongoDbClient()
-    .on('connectionPoolReady', () => console.log('DB CONNECTED'))
+    .on('connectionPoolReady', () =>
+        console.log(`DB CONNECTED: @${process.env.MONGODB_CONNECTION_URI}`)
+    )
     .on('error', () => console.error('DB ERROR'))
     .connect();

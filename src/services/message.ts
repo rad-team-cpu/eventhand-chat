@@ -8,20 +8,22 @@ const createMessage = async (
     data: MessageInput,
     database: Db = mongoDatabase
 ) => {
-    try {
-        const collection = database.collection('messages');
+    const { senderId, content, timestamp } = data;
 
-        const document: Message = {
-            _id: new ObjectId(),
-            ...data,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-        };
+    const collection = database.collection('messages');
 
-        await collection.insertOne(document);
-    } catch (error) {
-        console.error(error);
-    }
+    const document: Message = {
+        _id: new ObjectId(),
+        senderId,
+        content,
+        timestamp,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    };
+
+    const result = await collection.insertOne(document);
+
+    return result;
 };
 
 export { createMessage };

@@ -1,8 +1,8 @@
-import { Db, Filter, ObjectId, UpdateFilter } from 'mongodb';
+import { Db, Filter, FindOptions, ObjectId, UpdateFilter } from 'mongodb';
 import mongoDbClient from '@database/mongodb';
 import Chat from '@src/models/chat';
 import { createMessage } from './message';
-import { MessageInput } from '@src/models/socketInputs';
+import { GetChatListInput, MessageInput } from '@src/models/socketInputs';
 
 const mongoDatabase = mongoDbClient().db();
 
@@ -41,6 +41,39 @@ const findChatByUsers = async (
     const chat = await collection.findOne<Chat>(filter);
 
     return chat;
+};
+
+const findChatListsById = async (
+    data: GetChatListInput,
+    database: Db = mongoDatabase
+) => {
+    const { senderId, senderType, pageNumber, pageSize } = data;
+
+    const id =
+        senderType === 'CLIENT' ? { userId: senderId } : { vendorId: senderId };
+
+    const collection = database.collection('chats');
+
+    const skip = (pageNumber - 1) * pageSize;
+    const limit = pageSize;
+
+    const filter = { ...id };
+    const options: FindOptions = {
+        skip: skip,
+        limit: limit,
+        sort: { updatedAt: -1 },
+    };
+
+    const totalDocuments = await collection.countDocuments(filter);
+    const documents = await collection.find(filter, options).toArray();
+    const totalPages = Math.ceil(totalDocuments / pageSize);
+
+    return {
+        documents,
+        totalPages,
+        currentPage: pageNumber,
+        hasMore: pageNumber < totalPages,
+    };
 };
 
 const createChat = async (data: MessageInput, database: Db = mongoDatabase) => {
@@ -87,11 +120,20 @@ const pushMessageToChat = async (
 
     const filter: Filter<Chat> = { _id: new ObjectId(chatId) };
 
-    const updatefilter: UpdateFilter<Chat> = { messages: { $push: messageId } };
+    const updatefilter: UpdateFilter<Chat> = {
+        messages: { $push: messageId },
+        updatedAt: new Date(),
+    };
 
     const result = await collection.updateOne(filter, updatefilter);
 
     return result;
 };
 
-export { findChatById, findChatByUsers, createChat, pushMessageToChat };
+export {
+    findChatById,
+    findChatByUsers,
+    findChatListsById,
+    createChat,
+    pushMessageToChat,
+};

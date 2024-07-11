@@ -1,10 +1,15 @@
 // import 'dotenv/config';
 import 'dotenv/config';
 import mongoDbClient from '@database/mongodb';
-import { createChat, pushMessageToChat } from '@src/services/chat';
+import {
+    createChat,
+    findChatListsById,
+    pushMessageToChat,
+} from '@src/services/chat';
 import WebSocket, { WebSocketServer } from 'ws';
 import verifyClerkToken from './middleware/verifyToken';
 import {
+    GetChatListInput,
     MessageInput,
     RegisterInput,
     socketInputSchema,
@@ -123,6 +128,11 @@ wsServer.on('connection', async (ws, req) => {
 
                         ws.send(status);
                     }
+                } else if (data.inputType === 'Get_Chat_List') {
+                    const chatListInput = data as GetChatListInput;
+                    const chatList = await findChatListsById(chatListInput);
+
+                    ws.send(JSON.stringify(chatList));
                 }
             } catch (error) {
                 console.error(error);

@@ -1,10 +1,10 @@
 // import 'dotenv/config';
 import 'dotenv/config';
 import mongoDbClient from '@database/mongodb';
-import { messageInputSchema } from '@src/models/message';
 import { createChat, pushMessageToChat } from '@src/services/chat';
 import WebSocket, { WebSocketServer } from 'ws';
 import verifyClerkToken from './middleware/verifyToken';
+import { socketInputSchema } from './models/socketInput';
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -72,7 +72,7 @@ wsServer.on('connection', async (ws, req) => {
         ws.on('message', async (message) => {
             console.log('Received:', message);
 
-            const validData = messageInputSchema.safeParse(message);
+            const validData = socketInputSchema.safeParse(message);
 
             const { success, data } = validData;
 

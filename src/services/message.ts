@@ -1,11 +1,12 @@
 import { Db, ObjectId } from 'mongodb';
-import { Message, MessageInput } from '@src/models/message';
+import Message from '@src/models/message';
 import mongoDbClient from '@database/mongodb';
+import { SocketInput } from '@src/models/socketInput';
 
 const mongoDatabase = mongoDbClient().db();
 
 const createMessage = async (
-    data: MessageInput,
+    data: SocketInput,
     database: Db = mongoDatabase
 ) => {
     const { senderId, content, timestamp } = data;

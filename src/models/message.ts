@@ -11,7 +11,7 @@ type Message = {
 };
 
 const messageInputSchema = z.object({
-    chatId: z.coerce.string(),
+    chatId: z.coerce.string().optional(),
     senderId: z.coerce.string(),
     senderName: z.coerce.string(),
     receiverId: z.coerce.string(),

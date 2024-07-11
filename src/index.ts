@@ -4,7 +4,11 @@ import mongoDbClient from '@database/mongodb';
 import { createChat, pushMessageToChat } from '@src/services/chat';
 import WebSocket, { WebSocketServer } from 'ws';
 import verifyClerkToken from './middleware/verifyToken';
-import { messageInputSchema } from './models/socketInputs';
+import {
+    MessageInput,
+    RegisterInput,
+    socketInputSchema,
+} from './models/socketInputs';
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -72,7 +76,7 @@ wsServer.on('connection', async (ws, req) => {
         ws.on('message', async (message) => {
             console.log('Received:', message);
 
-            const validData = messageInputSchema.safeParse(message);
+            const validData = socketInputSchema.safeParse(message);
 
             const { success, data } = validData;
 
@@ -89,32 +93,41 @@ wsServer.on('connection', async (ws, req) => {
                     throw Error('Data undefined');
                 }
 
-                const { chatId, senderId, receiverId } = data;
+                if (data.inputType == 'Register') {
+                    const registerInput = data as RegisterInput;
+                    const { senderId } = registerInput;
 
-                connections.set(senderId, ws);
-                console.log(`User connected: ${senderId}`);
+                    connections.set(senderId, ws);
+                    console.log(`User connected: ${senderId}`);
+                } else if (data.inputType == 'Send_Message') {
+                    const messageInput = data as MessageInput;
+                    const { chatId, receiverId } = messageInput;
 
-                if (!chatId) {
-                    await createChat(data);
-                } else {
-                    await pushMessageToChat(data);
-                }
+                    if (!chatId) {
+                        await createChat(messageInput);
+                    } else {
+                        await pushMessageToChat(messageInput);
+                    }
 
-                const receiverWs = connections.get(receiverId);
+                    const receiverWs = connections.get(receiverId);
 
-                if (receiverWs && receiverWs.readyState === 1) {
-                    const receiverMessage = JSON.stringify(data);
+                    if (receiverWs && receiverWs.readyState === 1) {
+                        const receiverMessage = JSON.stringify(messageInput);
 
-                    receiverWs.send(receiverMessage, (err) => {
-                        console.error('Error has occured while sending:', err);
-                        const status = JSON.stringify({ status: 'ERROR' });
+                        receiverWs.send(receiverMessage, (err) => {
+                            console.error(
+                                'Error has occured while sending:',
+                                err
+                            );
+                            const status = JSON.stringify({ status: 'ERROR' });
+                            ws.send(status);
+                            return;
+                        });
+
+                        const status = JSON.stringify({ status: 'SENT' });
+
                         ws.send(status);
-                        return;
-                    });
-
-                    const status = JSON.stringify({ status: 'SENT' });
-
-                    ws.send(status);
+                    }
                 }
             } catch (error) {
                 console.error(error);

@@ -7,17 +7,27 @@ const socketInputTypeSchema = z.union([
     z.literal('Get_Chat_List'),
 ]);
 
-const messageInputSchema = z.object({
-    chatId: z.coerce.string().optional(),
+const senderTypeSchema = z.union([z.literal('VENDOR'), z.literal('CLIENT')]);
+
+const registerInputTypeSchema = z.object({
     senderId: z.coerce.string(),
-    senderName: z.coerce.string(),
-    receiverId: z.coerce.string(),
-    receiverName: z.coerce.string(),
-    content: z.coerce.string(),
-    timestamp: z.coerce.date(),
-    senderType: z.union([z.literal('VENDOR'), z.literal('CLIENT')]),
+    senderType: senderTypeSchema,
     inputType: socketInputTypeSchema,
 });
+
+type RegisterInput = z.infer<typeof registerInputTypeSchema>;
+
+const messageInputSchema = z.intersection(
+    registerInputTypeSchema,
+    z.object({
+        chatId: z.coerce.string().optional(),
+        senderName: z.coerce.string(),
+        receiverId: z.coerce.string(),
+        receiverName: z.coerce.string(),
+        content: z.coerce.string(),
+        timestamp: z.coerce.date(),
+    })
+);
 
 type MessageInput = z.infer<typeof messageInputSchema>;
 
@@ -38,11 +48,24 @@ const getMessagesInputSchema = z.object({
 
 type GetMessagesInput = z.infer<typeof getMessagesInputSchema>;
 
+const socketInputSchema = z.union([
+    registerInputTypeSchema,
+    messageInputSchema,
+    getChatListInputSchema,
+    getMessagesInputSchema,
+]);
+
+type SocketInput = z.infer<typeof socketInputSchema>;
+
 export {
+    RegisterInput,
+    registerInputTypeSchema,
     MessageInput,
     messageInputSchema,
     GetChatListInput,
     getChatListInputSchema,
     GetMessagesInput,
     getMessagesInputSchema,
+    socketInputSchema,
+    SocketInput,
 };

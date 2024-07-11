@@ -105,10 +105,21 @@ wsServer.on('connection', async (ws, req) => {
                 if (receiverWs && receiverWs.readyState === 1) {
                     const receiverMessage = JSON.stringify(data);
 
-                    receiverWs.send(receiverMessage);
+                    receiverWs.send(receiverMessage, (err) => {
+                        console.error('Error has occured while sending:', err);
+                        const status = JSON.stringify({ status: 'ERROR' });
+                        ws.send(status);
+                        return;
+                    });
+
+                    const status = JSON.stringify({ status: 'SENT' });
+
+                    ws.send(status);
                 }
             } catch (error) {
                 console.error(error);
+                const status = JSON.stringify({ status: 'ERROR' });
+                ws.send(status);
             }
         });
     } else {

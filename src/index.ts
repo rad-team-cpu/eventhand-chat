@@ -133,10 +133,10 @@ wsServer.on('connection', async (ws, req) => {
     });
 
     ws.on('close', () => {
-        for (const [receiverId, connectedWs] of connections.entries()) {
-            if (connectedWs === ws) {
-                connections.delete(receiverId);
-                console.log(`User disconnected: ${receiverId}`);
+        for (const [userId, userWs] of connections.entries()) {
+            if (userWs === ws) {
+                connections.delete(userId);
+                console.log(`User disconnected: ${userId}`);
                 break;
             }
         }

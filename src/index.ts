@@ -4,6 +4,7 @@ import mongoDbClient from '@database/mongodb';
 import { messageInputSchema } from '@src/models/message';
 import { createChat, pushMessageToChat } from '@src/services/chat';
 import WebSocket, { WebSocketServer } from 'ws';
+import verifyClerkToken from './middleware/verifyToken';
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -47,7 +48,7 @@ const wsServer = new WebSocketServer({ port });
 
 const connections = new Map<string, WebSocket>();
 
-wsServer.on('connection', (ws) => {
+wsServer.on('connection', async (ws, req) => {
     console.log('New WebSocket client connected');
 
     mongoDbClient()
@@ -57,46 +58,64 @@ wsServer.on('connection', (ws) => {
         .on('error', () => console.error('DB ERROR'))
         .connect();
 
-    ws.on('message', async (message) => {
-        console.log('Received:', message);
+    const token = req.headers.authorization;
 
-        const validData = messageInputSchema.safeParse(message);
+    if (!token) {
+        console.log('No token provided');
+        ws.close(1000, 'No token provided');
+        return;
+    }
 
-        const { success, data } = validData;
+    const verifiedToken = await verifyClerkToken(token);
 
-        try {
-            if (!success) {
-                const validationError = validData.error.issues[0];
-                const errMessage = JSON.stringify({ error: validationError });
-                ws.send(errMessage);
+    if (verifiedToken) {
+        ws.on('message', async (message) => {
+            console.log('Received:', message);
+
+            const validData = messageInputSchema.safeParse(message);
+
+            const { success, data } = validData;
+
+            try {
+                if (!success) {
+                    const validationError = validData.error.issues[0];
+                    const errMessage = JSON.stringify({
+                        error: validationError,
+                    });
+                    ws.send(errMessage);
+                }
+
+                if (data == undefined) {
+                    throw Error('Data undefined');
+                }
+
+                const { chatId, senderId, receiverId } = data;
+
+                connections.set(senderId, ws);
+                console.log(`User connected: ${senderId}`);
+
+                if (!chatId) {
+                    await createChat(data);
+                } else {
+                    await pushMessageToChat(data);
+                }
+
+                const receiverWs = connections.get(receiverId);
+
+                if (receiverWs && receiverWs.readyState === 1) {
+                    const receiverMessage = JSON.stringify(data);
+
+                    receiverWs.send(receiverMessage);
+                }
+            } catch (error) {
+                console.error(error);
             }
-
-            if (data == undefined) {
-                throw Error('Data undefined');
-            }
-
-            const { chatId, senderId, receiverId } = data;
-
-            connections.set(senderId, ws);
-            console.log(`User connected: ${senderId}`);
-
-            if (!chatId) {
-                await createChat(data);
-            } else {
-                await pushMessageToChat(data);
-            }
-
-            const receiverWs = connections.get(receiverId);
-
-            if (receiverWs && receiverWs.readyState === 1) {
-                const receiverMessage = JSON.stringify(data);
-
-                receiverWs.send(receiverMessage);
-            }
-        } catch (error) {
-            console.error(error);
-        }
-    });
+        });
+    } else {
+        console.log('Invalid token');
+        ws.close(1000, 'Invalid token');
+        return;
+    }
 
     ws.on('error', (error) => {
         console.error('WebSocket error:', error);

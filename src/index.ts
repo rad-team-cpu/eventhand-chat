@@ -52,15 +52,10 @@ const wsServer = new WebSocketServer({ port });
 
 const connections = new Map<string, WebSocket>();
 
+mongoDbClient().connect();
+
 wsServer.on('connection', async (ws, req) => {
     console.log('New WebSocket client connected');
-
-    mongoDbClient()
-        .on('connectionPoolReady', () =>
-            console.log(`DB CONNECTED: @${process.env.MONGODB_CONNECTION_URI}`)
-        )
-        .on('error', () => console.error('DB ERROR'))
-        .connect();
 
     const token = req.headers.authorization;
 

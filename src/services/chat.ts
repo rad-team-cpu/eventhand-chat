@@ -2,12 +2,12 @@ import { Db, Filter, ObjectId, UpdateFilter } from 'mongodb';
 import mongoDbClient from '@database/mongodb';
 import Chat from '@src/models/chat';
 import { createMessage } from './message';
-import { SocketInput } from '@src/models/socketInput';
+import { MessageInput } from '@src/models/socketInputs';
 
 const mongoDatabase = mongoDbClient().db();
 
 const findChatById = async (
-    data: SocketInput,
+    data: MessageInput,
     database: Db = mongoDatabase
 ) => {
     const { chatId } = data;
@@ -22,7 +22,7 @@ const findChatById = async (
 };
 
 const findChatByUsers = async (
-    data: SocketInput,
+    data: MessageInput,
     database: Db = mongoDatabase
 ) => {
     const { senderId, receiverId, senderType } = data;
@@ -43,7 +43,7 @@ const findChatByUsers = async (
     return chat;
 };
 
-const createChat = async (data: SocketInput, database: Db = mongoDatabase) => {
+const createChat = async (data: MessageInput, database: Db = mongoDatabase) => {
     const message = await createMessage(data);
     const messageId = message.insertedId;
 
@@ -75,7 +75,7 @@ const createChat = async (data: SocketInput, database: Db = mongoDatabase) => {
 };
 
 const pushMessageToChat = async (
-    data: SocketInput,
+    data: MessageInput,
     database: Db = mongoDatabase
 ) => {
     const { chatId } = data;

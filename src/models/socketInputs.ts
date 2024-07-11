@@ -7,7 +7,7 @@ const socketInputTypeSchema = z.union([
     z.literal('Get_Chat_List'),
 ]);
 
-const socketInputSchema = z.object({
+const messageInputSchema = z.object({
     chatId: z.coerce.string().optional(),
     senderId: z.coerce.string(),
     senderName: z.coerce.string(),
@@ -19,7 +19,7 @@ const socketInputSchema = z.object({
     inputType: socketInputTypeSchema,
 });
 
-type SocketInput = z.infer<typeof socketInputSchema>;
+type MessageInput = z.infer<typeof messageInputSchema>;
 
 const getChatListInputSchema = z.object({
     senderId: z.coerce.string(),
@@ -39,8 +39,8 @@ const getMessagesInputSchema = z.object({
 type GetMessagesInput = z.infer<typeof getMessagesInputSchema>;
 
 export {
-    SocketInput,
-    socketInputSchema,
+    MessageInput,
+    messageInputSchema,
     GetChatListInput,
     getChatListInputSchema,
     GetMessagesInput,

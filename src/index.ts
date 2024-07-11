@@ -4,7 +4,7 @@ import mongoDbClient from '@database/mongodb';
 import { createChat, pushMessageToChat } from '@src/services/chat';
 import WebSocket, { WebSocketServer } from 'ws';
 import verifyClerkToken from './middleware/verifyToken';
-import { socketInputSchema } from './models/socketInput';
+import { messageInputSchema } from './models/socketInputs';
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -72,19 +72,19 @@ wsServer.on('connection', async (ws, req) => {
         ws.on('message', async (message) => {
             console.log('Received:', message);
 
-            const validData = socketInputSchema.safeParse(message);
+            const validData = messageInputSchema.safeParse(message);
 
             const { success, data } = validData;
 
-            try {
-                if (!success) {
-                    const validationError = validData.error.issues[0];
-                    const errMessage = JSON.stringify({
-                        error: validationError,
-                    });
-                    ws.send(errMessage);
-                }
+            if (!success) {
+                const validationError = validData.error.issues;
+                console.log(validationError);
+                const status = JSON.stringify({ status: 'ERROR' });
+                ws.send(status);
+                return;
+            }
 
+            try {
                 if (data == undefined) {
                     throw Error('Data undefined');
                 }

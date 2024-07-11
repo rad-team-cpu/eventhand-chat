@@ -21,4 +21,28 @@ const socketInputSchema = z.object({
 
 type SocketInput = z.infer<typeof socketInputSchema>;
 
-export { SocketInput, socketInputSchema };
+const getChatListInputSchema = z.object({
+    senderId: z.coerce.string(),
+    senderType: z.union([z.literal('VENDOR'), z.literal('CLIENT')]),
+    pageNumber: z.coerce.number(),
+    pageSize: z.coerce.number(),
+    inputType: socketInputTypeSchema,
+});
+
+type GetChatListInput = z.infer<typeof getChatListInputSchema>;
+
+const getMessagesInputSchema = z.object({
+    chatId: z.coerce.string(),
+    inputType: socketInputTypeSchema,
+});
+
+type GetMessagesInput = z.infer<typeof getMessagesInputSchema>;
+
+export {
+    SocketInput,
+    socketInputSchema,
+    GetChatListInput,
+    getChatListInputSchema,
+    GetMessagesInput,
+    getMessagesInputSchema,
+};

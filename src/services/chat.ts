@@ -86,12 +86,12 @@ const createChat = async (data: MessageInput, database: Db = mongoDatabase) => {
 
     const user =
         senderType == 'CLIENT'
-            ? { _id: senderId, name: senderName }
-            : { _id: receiverId, name: receiverName };
+            ? { _id: new ObjectId(senderId), name: senderName }
+            : { _id: new ObjectId(receiverId), name: receiverName };
     const vendor =
         senderType == 'VENDOR'
-            ? { _id: senderId, name: senderName }
-            : { _id: receiverId, name: receiverName };
+            ? { _id: new ObjectId(senderId), name: senderName }
+            : { _id: new ObjectId(receiverId), name: receiverName };
 
     const document: Chat = {
         _id: new ObjectId(),

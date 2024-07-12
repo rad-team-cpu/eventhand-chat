@@ -43,6 +43,8 @@ type GetChatListInput = z.infer<typeof getChatListInputSchema>;
 
 const getMessagesInputSchema = z.object({
     chatId: z.coerce.string(),
+    pageNumber: z.coerce.number(),
+    pageSize: z.coerce.number(),
     inputType: socketInputTypeSchema,
 });
 

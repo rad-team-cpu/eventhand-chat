@@ -10,10 +10,12 @@ import WebSocket, { WebSocketServer } from 'ws';
 import verifyClerkToken from './middleware/verifyToken';
 import {
     GetChatListInput,
+    GetMessagesInput,
     MessageInput,
     RegisterInput,
     socketInputSchema,
 } from './models/socketInputs';
+import { findMessagesByChatId } from './services/message';
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -133,6 +135,12 @@ wsServer.on('connection', async (ws, req) => {
                     const chatList = await findChatListsById(chatListInput);
 
                     ws.send(JSON.stringify(chatList));
+                } else if (data.inputType === 'Get_Messages') {
+                    const getMessagesInput = data as GetMessagesInput;
+                    const messages =
+                        await findMessagesByChatId(getMessagesInput);
+
+                    ws.send(JSON.stringify(messages));
                 }
             } catch (error) {
                 console.error(error);

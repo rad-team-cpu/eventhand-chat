@@ -22,50 +22,38 @@ import { findVendorIdByClerkId } from './services/vendor';
 
 const port = Number(process.env.PORT) || 3000;
 
-// const onStart = () =>
-//     console.log(`SERVER START: eventhand-chat listening at ${PORT}`);
-
-// // eslint-disable-next-line @typescript-eslint/no-explicit-any
-// const onError = (error: any) => {
-//     if (error.syscall !== 'listen') {
-//         console.log(error);
-//         throw error;
-//     }
-
-//     switch (error.code) {
-//         case 'EACCESS':
-//             console.error('Insufficient permissions to start server:', error);
-//             process.exit(1);
-//             break;
-//         case 'EADDRINUSE':
-//             console.error(`Port ${PORT} is already in use`);
-//             process.exit(1);
-//             break;
-//         default:
-//             console.log('An Error has occured:', error);
-//             throw error;
-//     }
-// };
-
-// const httpServer = app.listen(PORT, onStart);
-
-// const onListening = () => {
-//     const addr = httpServer.address();
-//     const bind =
-//         typeof addr === 'string' ? `pipe ${addr}` : `port ${addr?.port}`;
-//     console.log(`Listening on ${bind}`);
-// };
-
-// httpServer.on('listening', onListening).on('error', onError);
-
 const wsServer = new WebSocketServer({ port });
 
 const connections = new Map<string, WebSocket>();
 
 mongoDbClient().connect();
 
-wsServer.on('connection', async (ws, req) => {
+interface Socket extends WebSocket {
+    isAlive?: boolean;
+}
+
+const heartbeatInterval = 30000; // Interval in milliseconds
+
+const heartbeat = (wss: WebSocketServer, interval: number) => {
+    return setInterval(() => {
+        wsServer.clients.forEach((ws: Socket) => {
+            if (!ws.isAlive) {
+                // Terminate the connection if client didn't respond to the last heartbeat
+                return ws.terminate();
+            }
+
+            // Reset the heartbeat status
+            ws.isAlive = false;
+            // Send a heartbeat message to the client
+            ws.ping();
+        });
+    }, interval);
+};
+
+wsServer.on('connection', async (ws: Socket, req) => {
     console.log('New WebSocket client connected');
+
+    ws.isAlive = true;
 
     const token = req.headers.authorization;
 
@@ -184,6 +172,10 @@ wsServer.on('connection', async (ws, req) => {
         return;
     }
 
+    ws.on('pong', () => {
+        ws.isAlive = true;
+    });
+
     ws.on('error', (error) => {
         console.error('WebSocket error:', error);
     });
@@ -198,3 +190,5 @@ wsServer.on('connection', async (ws, req) => {
         }
     });
 });
+
+heartbeat(wsServer, heartbeatInterval);

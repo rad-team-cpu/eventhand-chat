@@ -120,18 +120,28 @@ wsServer.on('connection', async (ws: Socket, req) => {
                         const status = JSON.stringify({ status: 'SENT' });
 
                         ws.send(status);
+
+                        console.log(
+                            `Message successfully sent to RECIEVER:${receiverId}`
+                        );
                     }
                 } else if (data.inputType === 'Get_Chat_List') {
                     const chatListInput = data as GetChatListInput;
                     const chatList = await findChatListsById(chatListInput);
 
                     ws.send(JSON.stringify(chatList));
+                    console.log(
+                        `Successfully sent chat list to SENDER:${chatListInput.senderId}`
+                    );
                 } else if (data.inputType === 'Get_Messages') {
                     const getMessagesInput = data as GetMessagesInput;
                     const messages =
                         await findMessagesByChatId(getMessagesInput);
 
                     ws.send(JSON.stringify(messages));
+                    console.log(
+                        `Successfully sent messages from CHAT ID:${getMessagesInput.chatId}`
+                    );
                 } else if (data.inputType === 'Switch') {
                     const switchInput = data as SwitchInput;
                     const { senderId, senderType } = switchInput;

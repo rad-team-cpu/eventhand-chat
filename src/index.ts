@@ -26,7 +26,10 @@ const wsServer = new WebSocketServer({ port });
 
 const connections = new Map<string, WebSocket>();
 
-mongoDbClient().connect();
+mongoDbClient()
+    .on('serverOpening', () => console.log('DB Connected'))
+    .on('serverClosed', () => console.log('DB Disconnected'))
+    .connect();
 
 interface Socket extends WebSocket {
     isAlive?: boolean;

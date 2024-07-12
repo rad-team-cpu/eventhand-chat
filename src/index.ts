@@ -14,8 +14,11 @@ import {
     MessageInput,
     RegisterInput,
     socketInputSchema,
+    SwitchInput,
 } from './models/socketInputs';
 import { findMessagesByChatId } from './services/message';
+import { findClientIdByClerkId } from './services/client';
+import { findVendorIdByClerkId } from './services/vendor';
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -141,6 +144,33 @@ wsServer.on('connection', async (ws, req) => {
                         await findMessagesByChatId(getMessagesInput);
 
                     ws.send(JSON.stringify(messages));
+                } else if (data.inputType === 'Switch') {
+                    const switchInput = data as SwitchInput;
+                    const { senderId, senderType } = switchInput;
+
+                    let id: string = senderId;
+
+                    if (senderType === 'CLIENT') {
+                        id = await findClientIdByClerkId(switchInput);
+                    }
+
+                    if (senderType === 'VENDOR') {
+                        id = await findVendorIdByClerkId(switchInput);
+                    }
+
+                    for (const [userId] of connections.entries()) {
+                        if (userId === senderId) {
+                            connections.delete(userId);
+                            connections.set(id, ws);
+
+                            const switchedType =
+                                senderType === 'CLIENT' ? 'VENDOR' : 'CLIENT';
+                            console.log(
+                                `User Switched from ${senderType} to ${switchedType}:  ${id}`
+                            );
+                            break;
+                        }
+                    }
                 }
             } catch (error) {
                 console.error(error);

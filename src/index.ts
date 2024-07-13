@@ -31,6 +31,7 @@ const connections = new Map<string, WebSocket>();
 mongoDbClient()
     .on('serverOpening', () => console.log('DB Connected'))
     .on('serverClosed', () => console.log('DB Disconnected'))
+    .on('error', (error) => console.log('An Error has Occured:', error))
     .connect();
 
 interface Socket extends WebSocket {

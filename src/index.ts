@@ -3,7 +3,8 @@ import 'dotenv/config';
 import mongoDbClient from '@database/mongodb';
 import {
     createChat,
-    findChatListsById,
+    findClientChatListByClientId,
+    findVendorChatListByVendorId,
     pushMessageToChat,
 } from '@src/services/chat';
 import WebSocket, { WebSocketServer } from 'ws';
@@ -19,6 +20,7 @@ import {
 import { findMessagesByChatId } from './services/message';
 import { findClientIdByClerkId } from './services/client';
 import { findVendorIdByClerkId } from './services/vendor';
+import { ChatList } from './models/chat';
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -130,7 +132,18 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     }
                 } else if (data.inputType === 'Get_Chat_List') {
                     const chatListInput = data as GetChatListInput;
-                    const chatList = await findChatListsById(chatListInput);
+                    const { senderType } = chatListInput;
+                    let chatList: ChatList | undefined = undefined;
+
+                    if (senderType === 'CLIENT') {
+                        chatList =
+                            await findClientChatListByClientId(chatListInput);
+                    }
+
+                    if (senderType === 'VENDOR') {
+                        chatList =
+                            await findVendorChatListByVendorId(chatListInput);
+                    }
 
                     ws.send(JSON.stringify(chatList));
                     console.log(

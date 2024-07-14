@@ -1,11 +1,11 @@
 import { z } from 'zod';
 
 const socketInputTypeSchema = z.union([
-    z.literal('Register'),
-    z.literal('Send_Message'),
-    z.literal('Get_Messages'),
-    z.literal('Get_Chat_List'),
-    z.literal('Switch'),
+    z.literal('REGISTER'),
+    z.literal('SEND_MESSAGE'),
+    z.literal('GET_MESSAGES'),
+    z.literal('GET_CHAT_LIST'),
+    z.literal('SWITCH'),
 ]);
 
 const senderTypeSchema = z.union([z.literal('VENDOR'), z.literal('CLIENT')]);

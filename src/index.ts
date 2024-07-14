@@ -92,7 +92,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     throw Error('Data undefined');
                 }
 
-                if (data.inputType == 'Register') {
+                if (data.inputType == 'REGISTER') {
                     const registerInput = data as RegisterInput;
                     const { senderId, senderType } = registerInput;
 
@@ -103,7 +103,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
                     connections.set(senderId, ws);
                     console.log(`User connected: ${senderType}: ${senderId}`);
-                } else if (data.inputType == 'Send_Message') {
+                } else if (data.inputType == 'SEND_MESSAGE') {
                     const messageInput = data as MessageInput;
                     const { chatId, receiverId } = messageInput;
 
@@ -136,7 +136,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
                             `Message successfully sent to RECIEVER:${receiverId}`
                         );
                     }
-                } else if (data.inputType === 'Get_Chat_List') {
+                } else if (data.inputType === 'GET_CHAT_LIST') {
                     const chatListInput = data as GetChatListInput;
                     const { senderType } = chatListInput;
                     let chatList: ChatList | undefined = undefined;
@@ -155,7 +155,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     console.log(
                         `Successfully sent chat list to SENDER:${chatListInput.senderId}`
                     );
-                } else if (data.inputType === 'Get_Messages') {
+                } else if (data.inputType === 'GET_MESSAGES') {
                     const getMessagesInput = data as GetMessagesInput;
                     const messages =
                         await findMessagesByChatId(getMessagesInput);
@@ -164,7 +164,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     console.log(
                         `Successfully sent messages from CHAT ID:${getMessagesInput.chatId}`
                     );
-                } else if (data.inputType === 'Switch') {
+                } else if (data.inputType === 'SWITCH') {
                     const switchInput = data as SwitchInput;
                     const { senderId, senderType } = switchInput;
 

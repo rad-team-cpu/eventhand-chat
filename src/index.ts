@@ -96,6 +96,11 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     const registerInput = data as RegisterInput;
                     const { senderId, senderType } = registerInput;
 
+                    if (connections.has(senderId)) {
+                        console.log(`User already connected`);
+                        return;
+                    }
+
                     connections.set(senderId, ws);
                     console.log(`User connected: ${senderType}: ${senderId}`);
                 } else if (data.inputType == 'Send_Message') {

@@ -1,6 +1,6 @@
-import { Db, Filter, FindOptions, ObjectId, UpdateFilter } from 'mongodb';
+import { Db, Filter, ObjectId, UpdateFilter } from 'mongodb';
 import mongoDbClient from '@database/mongodb';
-import Chat from '@src/models/chat';
+import { Chat, ChatList } from '@src/models/chat';
 import { createMessage } from './message';
 import { GetChatListInput, MessageInput } from '@src/models/socketInputs';
 
@@ -43,37 +43,190 @@ const findChatByUsers = async (
     return chat;
 };
 
-const findChatListsById = async (
+const findClientChatListByClientId = async (
     data: GetChatListInput,
     database: Db = mongoDatabase
 ) => {
-    const { senderId, senderType, pageNumber, pageSize } = data;
+    const { senderId, pageNumber, pageSize } = data;
 
-    const id =
-        senderType === 'CLIENT' ? { userId: senderId } : { vendorId: senderId };
+    const userId = senderId;
 
     const collection = database.collection('chats');
 
+    const filter = { userId: userId };
     const skip = (pageNumber - 1) * pageSize;
     const limit = pageSize;
 
-    const filter = { ...id };
-    const options: FindOptions = {
-        skip: skip,
-        limit: limit,
-        sort: { updatedAt: -1 },
-    };
+    const pipeline = [
+        {
+            $match: {
+                'user.id': new ObjectId(userId),
+            },
+        },
+        {
+            $lookup: {
+                from: 'messages',
+                let: { messageIds: '$messages' },
+                pipeline: [
+                    { $match: { $expr: { $in: ['$_id', '$$messageIds'] } } },
+                    { $sort: { timestamp: -1 } },
+                    { $limit: 1 },
+                ],
+                as: 'latestMessage',
+            },
+        },
+        {
+            $unwind: {
+                path: '$latestMessage',
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: 'vendors',
+                localField: 'vendor.id',
+                foreignField: '_id',
+                as: 'vendorDetails',
+            },
+        },
+        {
+            $unwind: '$vendorDetails',
+        },
+        {
+            $project: {
+                id: '$_id',
+                message: {
+                    content: '$latestMessage.content',
+                    timestamp: '$latestMessage.timestamp',
+                },
+                vendor: {
+                    id: '$vendorDetails._id',
+                    name: '$vendorDetails.name',
+                    logo: '$vendorDetails.logo',
+                },
+            },
+        },
+        {
+            $sort: {
+                'message.timestamp': -1,
+            },
+        },
+        {
+            $skip: skip,
+        },
+        {
+            $limit: limit,
+        },
+    ];
 
+    const documents = await collection.aggregate(pipeline).toArray();
     const totalDocuments = await collection.countDocuments(filter);
-    const documents = await collection.find(filter, options).toArray();
     const totalPages = Math.ceil(totalDocuments / pageSize);
 
-    return {
+    const result: ChatList = {
         documents,
         totalPages,
         currentPage: pageNumber,
         hasMore: pageNumber < totalPages,
     };
+
+    return result;
+};
+
+const findVendorChatListByVendorId = async (
+    data: GetChatListInput,
+    database: Db = mongoDatabase
+) => {
+    const { senderId, pageNumber, pageSize } = data;
+
+    const vendorId = senderId;
+
+    const collection = database.collection('chats');
+
+    const filter = { vendorId: vendorId };
+    const skip = (pageNumber - 1) * pageSize;
+    const limit = pageSize;
+
+    const pipeline = [
+        {
+            $match: {
+                'vendor.id': new ObjectId(vendorId),
+            },
+        },
+        {
+            $lookup: {
+                from: 'messages',
+                let: { messageIds: '$messages' },
+                pipeline: [
+                    { $match: { $expr: { $in: ['$_id', '$$messageIds'] } } },
+                    { $sort: { timestamp: -1 } },
+                    { $limit: 1 },
+                ],
+                as: 'latestMessage',
+            },
+        },
+        {
+            $unwind: {
+                path: '$latestMessage',
+                preserveNullAndEmptyArrays: true,
+            },
+        },
+        {
+            $lookup: {
+                from: 'users',
+                localField: 'user.id',
+                foreignField: '_id',
+                as: 'userDetails',
+            },
+        },
+        {
+            $unwind: '$userDetails',
+        },
+        {
+            $project: {
+                id: '$_id',
+                message: {
+                    content: '$latestMessage.content',
+                    timestamp: '$latestMessage.timestamp',
+                },
+                user: {
+                    id: '$userDetails._id',
+                    name: {
+                        $concat: [
+                            '$userDetails.firstName',
+                            ' ',
+                            '$userDetails.lastName',
+                        ],
+                    },
+                    profilePicture: '$userDetails.profilePicture',
+                },
+            },
+        },
+        {
+            $sort: {
+                'message.timestamp': -1,
+            },
+        },
+        {
+            $skip: skip,
+        },
+        {
+            $limit: limit,
+        },
+    ];
+
+    const documents = await collection.aggregate(pipeline).toArray();
+    const totalDocuments = await collection.countDocuments(filter);
+    const totalPages = Math.ceil(totalDocuments / pageSize);
+
+    const result: ChatList = {
+        documents,
+        totalPages,
+        currentPage: pageNumber,
+        hasMore: pageNumber < totalPages,
+    };
+
+    return result;
 };
 
 const createChat = async (data: MessageInput, database: Db = mongoDatabase) => {
@@ -133,7 +286,8 @@ const pushMessageToChat = async (
 export {
     findChatById,
     findChatByUsers,
-    findChatListsById,
+    findClientChatListByClientId,
+    findVendorChatListByVendorId,
     createChat,
     pushMessageToChat,
 };

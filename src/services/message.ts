@@ -2,7 +2,7 @@ import { Db, Filter, FindOptions, ObjectId } from 'mongodb';
 import Message from '@src/models/message';
 import mongoDbClient from '@database/mongodb';
 import { GetMessagesInput, MessageInput } from '@src/models/socketInputs';
-import Chat from '@src/models/chat';
+import { Chat } from '@src/models/chat';
 
 const mongoDatabase = mongoDbClient().db();
 

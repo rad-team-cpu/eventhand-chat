@@ -3,7 +3,8 @@ import 'dotenv/config';
 import mongoDbClient from '@database/mongodb';
 import {
     createChat,
-    findChatListsById,
+    findClientChatListByClientId,
+    findVendorChatListByVendorId,
     pushMessageToChat,
 } from '@src/services/chat';
 import WebSocket, { WebSocketServer } from 'ws';
@@ -19,6 +20,7 @@ import {
 import { findMessagesByChatId } from './services/message';
 import { findClientIdByClerkId } from './services/client';
 import { findVendorIdByClerkId } from './services/vendor';
+import { ChatList } from './models/chat';
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -29,6 +31,7 @@ const connections = new Map<string, WebSocket>();
 mongoDbClient()
     .on('serverOpening', () => console.log('DB Connected'))
     .on('serverClosed', () => console.log('DB Disconnected'))
+    .on('error', (error) => console.log('An Error has Occured:', error))
     .connect();
 
 interface Socket extends WebSocket {
@@ -58,7 +61,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
     ws.isAlive = true;
 
-    const token = req.headers.authorization;
+    const token = req.url?.split('token=')[1];
 
     if (!token) {
         console.log('No token provided');
@@ -91,10 +94,15 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
                 if (data.inputType == 'Register') {
                     const registerInput = data as RegisterInput;
-                    const { senderId } = registerInput;
+                    const { senderId, senderType } = registerInput;
+
+                    if (connections.has(senderId)) {
+                        console.log(`User already connected`);
+                        return;
+                    }
 
                     connections.set(senderId, ws);
-                    console.log(`User connected: ${senderId}`);
+                    console.log(`User connected: ${senderType}: ${senderId}`);
                 } else if (data.inputType == 'Send_Message') {
                     const messageInput = data as MessageInput;
                     const { chatId, receiverId } = messageInput;
@@ -130,7 +138,18 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     }
                 } else if (data.inputType === 'Get_Chat_List') {
                     const chatListInput = data as GetChatListInput;
-                    const chatList = await findChatListsById(chatListInput);
+                    const { senderType } = chatListInput;
+                    let chatList: ChatList | undefined = undefined;
+
+                    if (senderType === 'CLIENT') {
+                        chatList =
+                            await findClientChatListByClientId(chatListInput);
+                    }
+
+                    if (senderType === 'VENDOR') {
+                        chatList =
+                            await findVendorChatListByVendorId(chatListInput);
+                    }
 
                     ws.send(JSON.stringify(chatList));
                     console.log(

@@ -61,7 +61,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
     ws.isAlive = true;
 
-    const token = req.headers.authorization;
+    const token = req.url?.split('token=')[1];
 
     if (!token) {
         console.log('No token provided');
@@ -94,10 +94,10 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
                 if (data.inputType == 'Register') {
                     const registerInput = data as RegisterInput;
-                    const { senderId } = registerInput;
+                    const { senderId, senderType } = registerInput;
 
                     connections.set(senderId, ws);
-                    console.log(`User connected: ${senderId}`);
+                    console.log(`User connected: ${senderType}: ${senderId}`);
                 } else if (data.inputType == 'Send_Message') {
                     const messageInput = data as MessageInput;
                     const { chatId, receiverId } = messageInput;

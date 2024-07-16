@@ -43,8 +43,10 @@ const chats = [
     },
 ];
 
-const createMessageData = (senderId: string) => {
+const createMessageData = (userId: string, vendorId: string) => {
     const date = faker.date.anytime();
+
+    const senderId = getRandomId(userId, vendorId);
 
     return {
         _id: new ObjectId(),
@@ -66,9 +68,7 @@ const createManyMessageData = (
     vendorId: string,
     count: number
 ) => {
-    const senderId = getRandomId(userId, vendorId);
-
-    return Array.from(Array(count), () => createMessageData(senderId));
+    return Array.from(Array(count), () => createMessageData(userId, vendorId));
 };
 
 const createChatData = (ids: { userId: string; vendorId: string }) => {

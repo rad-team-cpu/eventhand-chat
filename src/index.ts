@@ -14,13 +14,13 @@ import {
     GetMessagesInput,
     MessageInput,
     RegisterInput,
-    socketInputSchema,
     SwitchInput,
 } from './models/socketInputs';
 import { findMessagesByChatId } from './services/message';
 import { findClientIdByClerkId } from './services/client';
 import { findVendorIdByClerkId } from './services/vendor';
 import { ChatList } from './models/chat';
+import { ChatListOutput } from './models/socketOutputs';
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -73,38 +73,27 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
     if (verifiedToken) {
         ws.on('message', async (message) => {
-            console.log('Received:', message);
-
-            const validData = socketInputSchema.safeParse(message);
-
-            const { success, data } = validData;
-
-            if (!success) {
-                const validationError = validData.error.issues;
-                console.log(validationError);
-                const status = JSON.stringify({ status: 'ERROR' });
-                ws.send(status);
-                return;
-            }
-
             try {
-                if (data == undefined) {
+                const parsedMessaged = JSON.parse(message.toString());
+
+                if (!parsedMessaged) {
                     throw Error('Data undefined');
                 }
 
-                if (data.inputType == 'REGISTER') {
-                    const registerInput = data as RegisterInput;
-                    const { senderId, senderType } = registerInput;
+                console.log(`RECIEVED: ${parsedMessaged.inputType} EVENT`);
 
-                    if (connections.has(senderId)) {
-                        console.log(`User already connected`);
-                        return;
-                    }
+                const registerInput = parsedMessaged as RegisterInput;
+                const { senderId, senderType } = registerInput;
 
+                if (connections.has(senderId)) {
+                    console.log(`User already connected`);
+                } else {
                     connections.set(senderId, ws);
                     console.log(`User connected: ${senderType}: ${senderId}`);
-                } else if (data.inputType == 'SEND_MESSAGE') {
-                    const messageInput = data as MessageInput;
+                }
+
+                if (parsedMessaged.inputType == 'SEND_MESSAGE') {
+                    const messageInput = parsedMessaged as MessageInput;
                     const { chatId, receiverId } = messageInput;
 
                     if (!chatId) {
@@ -136,9 +125,22 @@ wsServer.on('connection', async (ws: Socket, req) => {
                             `Message successfully sent to RECIEVER:${receiverId}`
                         );
                     }
-                } else if (data.inputType === 'GET_CHAT_LIST') {
-                    const chatListInput = data as GetChatListInput;
-                    const { senderType } = chatListInput;
+                } else if (parsedMessaged.inputType === 'GET_CHAT_LIST') {
+                    const {
+                        senderId,
+                        senderType,
+                        inputType,
+                        pageSize,
+                        pageNumber,
+                    } = parsedMessaged as GetChatListInput;
+                    const chatListInput: GetChatListInput = {
+                        senderId,
+                        senderType,
+                        inputType,
+                        pageNumber,
+                        pageSize,
+                    };
+                    console.log(chatListInput);
                     let chatList: ChatList | undefined = undefined;
 
                     if (senderType === 'CLIENT') {
@@ -151,12 +153,23 @@ wsServer.on('connection', async (ws: Socket, req) => {
                             await findVendorChatListByVendorId(chatListInput);
                     }
 
-                    ws.send(JSON.stringify(chatList));
+                    if (!chatList) {
+                        throw new Error(
+                            'Chat list parsedMessaged failed to load'
+                        );
+                    }
+
+                    const output: ChatListOutput = {
+                        chatList,
+                        outputType: 'GET_CHAT_LIST',
+                    };
+
+                    ws.send(JSON.stringify(output));
                     console.log(
-                        `Successfully sent chat list to SENDER:${chatListInput.senderId}`
+                        `Successfully sent chat list ${senderType}:${senderId}`
                     );
-                } else if (data.inputType === 'GET_MESSAGES') {
-                    const getMessagesInput = data as GetMessagesInput;
+                } else if (parsedMessaged.inputType === 'GET_MESSAGES') {
+                    const getMessagesInput = parsedMessaged as GetMessagesInput;
                     const messages =
                         await findMessagesByChatId(getMessagesInput);
 
@@ -164,8 +177,8 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     console.log(
                         `Successfully sent messages from CHAT ID:${getMessagesInput.chatId}`
                     );
-                } else if (data.inputType === 'SWITCH') {
-                    const switchInput = data as SwitchInput;
+                } else if (parsedMessaged.inputType === 'SWITCH') {
+                    const switchInput = parsedMessaged as SwitchInput;
                     const { senderId, senderType } = switchInput;
 
                     let id: string = senderId;
@@ -194,8 +207,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
                 }
             } catch (error) {
                 console.error(error);
-                const status = JSON.stringify({ status: 'ERROR' });
-                ws.send(status);
+                ws.send(JSON.stringify(error));
             }
         });
     } else {

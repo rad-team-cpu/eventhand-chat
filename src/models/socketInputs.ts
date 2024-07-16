@@ -8,6 +8,8 @@ const socketInputTypeSchema = z.union([
     z.literal('SWITCH'),
 ]);
 
+type SocketInputType = z.infer<typeof socketInputTypeSchema>;
+
 const senderTypeSchema = z.union([z.literal('VENDOR'), z.literal('CLIENT')]);
 
 const registerInputTypeSchema = z.object({
@@ -32,31 +34,33 @@ const messageInputSchema = z.intersection(
 
 type MessageInput = z.infer<typeof messageInputSchema>;
 
-const getChatListInputSchema = z.object({
-    senderId: z.coerce.string(),
-    senderType: senderTypeSchema,
-    pageNumber: z.coerce.number(),
-    pageSize: z.coerce.number(),
-    inputType: socketInputTypeSchema,
-});
+const getChatListInputSchema = z.intersection(
+    registerInputTypeSchema,
+    z.object({
+        pageNumber: z.coerce.number(),
+        pageSize: z.coerce.number(),
+    })
+);
 
 type GetChatListInput = z.infer<typeof getChatListInputSchema>;
 
-const getMessagesInputSchema = z.object({
-    chatId: z.coerce.string(),
-    pageNumber: z.coerce.number(),
-    pageSize: z.coerce.number(),
-    inputType: socketInputTypeSchema,
-});
+const getMessagesInputSchema = z.intersection(
+    registerInputTypeSchema,
+    z.object({
+        chatId: z.coerce.string(),
+        pageNumber: z.coerce.number(),
+        pageSize: z.coerce.number(),
+    })
+);
 
 type GetMessagesInput = z.infer<typeof getMessagesInputSchema>;
 
-const switchInputSchema = z.object({
-    clerkId: z.string(),
-    senderId: z.string(),
-    senderType: senderTypeSchema,
-    inputType: socketInputTypeSchema,
-});
+const switchInputSchema = z.intersection(
+    registerInputTypeSchema,
+    z.object({
+        clerkId: z.string(),
+    })
+);
 
 type SwitchInput = z.infer<typeof switchInputSchema>;
 
@@ -71,6 +75,7 @@ const socketInputSchema = z.union([
 type SocketInput = z.infer<typeof socketInputSchema>;
 
 export {
+    SocketInputType,
     RegisterInput,
     registerInputTypeSchema,
     MessageInput,

@@ -53,14 +53,14 @@ const findClientChatListByClientId = async (
 
     const collection = database.collection('chats');
 
-    const filter = { userId: userId };
+    const filter = { user: new ObjectId(userId) };
     const skip = (pageNumber - 1) * pageSize;
     const limit = pageSize;
 
     const pipeline = [
         {
             $match: {
-                'user.id': new ObjectId(userId),
+                user: new ObjectId(userId),
             },
         },
         {
@@ -84,7 +84,7 @@ const findClientChatListByClientId = async (
         {
             $lookup: {
                 from: 'vendors',
-                localField: 'vendor.id',
+                localField: 'vendor',
                 foreignField: '_id',
                 as: 'vendorDetails',
             },
@@ -95,20 +95,16 @@ const findClientChatListByClientId = async (
         {
             $project: {
                 id: '$_id',
-                message: {
-                    content: '$latestMessage.content',
-                    timestamp: '$latestMessage.timestamp',
-                },
-                vendor: {
-                    id: '$vendorDetails._id',
-                    name: '$vendorDetails.name',
-                    logo: '$vendorDetails.logo',
-                },
+                latestMessage: '$latestMessage.content',
+                timestamp: '$latestMessage.timestamp',
+                senderid: '$vendorDetails._id',
+                senderName: '$vendorDetails.name',
+                senderImage: '$vendorDetails.logo',
             },
         },
         {
             $sort: {
-                'message.timestamp': -1,
+                timestamp: -1,
             },
         },
         {
@@ -143,7 +139,7 @@ const findVendorChatListByVendorId = async (
 
     const collection = database.collection('chats');
 
-    const filter = { vendorId: vendorId };
+    const filter = { vendor: new ObjectId(vendorId) };
     const skip = (pageNumber - 1) * pageSize;
     const limit = pageSize;
 
@@ -185,21 +181,17 @@ const findVendorChatListByVendorId = async (
         {
             $project: {
                 id: '$_id',
-                message: {
-                    content: '$latestMessage.content',
-                    timestamp: '$latestMessage.timestamp',
+                latestMessage: '$latestMessage.content',
+                timestamp: '$latestMessage.timestamp',
+                senderId: '$userDetails._id',
+                name: {
+                    $concat: [
+                        '$userDetails.firstName',
+                        ' ',
+                        '$userDetails.lastName',
+                    ],
                 },
-                user: {
-                    id: '$userDetails._id',
-                    name: {
-                        $concat: [
-                            '$userDetails.firstName',
-                            ' ',
-                            '$userDetails.lastName',
-                        ],
-                    },
-                    profilePicture: '$userDetails.profilePicture',
-                },
+                profilePicture: '$userDetails.profilePicture',
             },
         },
         {

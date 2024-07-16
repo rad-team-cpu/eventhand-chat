@@ -57,7 +57,7 @@ const heartbeat = (wss: WebSocketServer, interval: number) => {
 };
 
 wsServer.on('connection', async (ws: Socket, req) => {
-    console.log('New WebSocket client connected');
+    console.log('A Websocket has connected');
 
     ws.isAlive = true;
 

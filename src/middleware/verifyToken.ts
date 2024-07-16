@@ -4,6 +4,7 @@ const verifyClerkToken = async (token: string) => {
     try {
         const verifiedToken = await verifyToken(token, {
             jwtKey: process.env.CLERK_JWT_KEY,
+            secretKey: process.env.CLERK_SECRET_KEY,
         });
 
         const { exp, nbf } = verifiedToken;

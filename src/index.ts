@@ -17,8 +17,6 @@ import {
     SwitchInput,
 } from './models/socketInputs';
 import { findMessagesByChatId } from './services/message';
-import { findClientIdByClerkId } from './services/client';
-import { findVendorIdByClerkId } from './services/vendor';
 import { ChatList } from './models/chat';
 import { ChatListOutput } from './models/socketOutputs';
 
@@ -133,6 +131,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
                         pageSize,
                         pageNumber,
                     } = parsedMessaged as GetChatListInput;
+
                     const chatListInput: GetChatListInput = {
                         senderId,
                         senderType,
@@ -140,7 +139,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
                         pageNumber,
                         pageSize,
                     };
-                    console.log(chatListInput);
+
                     let chatList: ChatList | undefined = undefined;
 
                     if (senderType === 'CLIENT') {
@@ -181,26 +180,13 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     const switchInput = parsedMessaged as SwitchInput;
                     const { senderId, senderType } = switchInput;
 
-                    let id: string = senderId;
-
-                    if (senderType === 'CLIENT') {
-                        id = await findClientIdByClerkId(switchInput);
-                    }
-
-                    if (senderType === 'VENDOR') {
-                        id = await findVendorIdByClerkId(switchInput);
-                    }
-
                     for (const [userId] of connections.entries()) {
                         if (userId === senderId) {
                             connections.delete(userId);
-                            connections.set(id, ws);
 
                             const switchedType =
                                 senderType === 'CLIENT' ? 'VENDOR' : 'CLIENT';
-                            console.log(
-                                `User Switched from ${senderType} to ${switchedType}:  ${id}`
-                            );
+                            console.log(`${senderType} to ${switchedType}`);
                             break;
                         }
                     }

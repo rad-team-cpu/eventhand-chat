@@ -61,7 +61,7 @@ const createMessage = async (
     data: MessageInput,
     database: Db = mongoDatabase
 ) => {
-    const { senderId, content, timestamp } = data;
+    const { senderId, content, timestamp, isImage } = data;
 
     const collection = database.collection('messages');
 
@@ -70,6 +70,7 @@ const createMessage = async (
         senderId,
         content,
         timestamp,
+        isImage,
         createdAt: new Date(),
         updatedAt: new Date(),
     };

@@ -266,13 +266,26 @@ const pushMessageToChat = async (
     const filter: Filter<Chat> = { _id: new ObjectId(chatId) };
 
     const updatefilter: UpdateFilter<Chat> = {
-        messages: { $push: messageId },
-        updatedAt: new Date(),
+        $push: { messages: messageId },
+        $set: { updatedAt: new Date() },
     };
 
     const result = await collection.updateOne(filter, updatefilter);
 
     return result;
+};
+
+const createOrPushToChat = async (
+    data: MessageInput,
+    database: Db = mongoDatabase
+) => {
+    const chat = await findChatById(data, database);
+
+    if (chat === null) {
+        return await createChat(data, database);
+    }
+
+    return await pushMessageToChat(data, database);
 };
 
 export {
@@ -282,4 +295,5 @@ export {
     findVendorChatListByVendorId,
     createChat,
     pushMessageToChat,
+    createOrPushToChat,
 };

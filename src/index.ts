@@ -2,10 +2,9 @@
 import 'dotenv/config';
 import mongoDbClient from '@database/mongodb';
 import {
-    createChat,
+    createOrPushToChat,
     findClientChatListByClientId,
     findVendorChatListByVendorId,
-    pushMessageToChat,
 } from '@src/services/chat';
 import WebSocket, { WebSocketServer } from 'ws';
 import verifyClerkToken from './middleware/verifyToken';
@@ -93,13 +92,11 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
                 if (parsedMessaged.inputType == 'SEND_MESSAGE') {
                     const messageInput = parsedMessaged as MessageInput;
-                    const { chatId, receiverId } = messageInput;
+                    const { receiverId } = messageInput;
 
-                    if (!chatId) {
-                        await createChat(messageInput);
-                    } else {
-                        await pushMessageToChat(messageInput);
-                    }
+                    await createOrPushToChat(messageInput);
+
+                    console.log('Chat message recieved and saved to database');
 
                     const receiverWs = connections.get(receiverId);
 

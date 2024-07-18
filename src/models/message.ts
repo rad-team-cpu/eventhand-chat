@@ -5,6 +5,7 @@ type Message = {
     senderId: string;
     content: string;
     timestamp: Date;
+    isImage?: boolean;
     createdAt?: Date;
     updatedAt?: Date;
 };

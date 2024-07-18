@@ -1,4 +1,5 @@
 import { ChatList } from './chat';
+import { MessageList } from './message';
 import { SocketInputType } from './socketInputs';
 
 type SocketOutputStatus = {
@@ -10,4 +11,9 @@ type ChatListOutput = {
     outputType: SocketInputType;
 };
 
-export { SocketOutputStatus, ChatListOutput };
+type GetMessagesOutput = {
+    messageList: MessageList;
+    outputType: SocketInputType;
+};
+
+export { SocketOutputStatus, ChatListOutput, GetMessagesOutput };

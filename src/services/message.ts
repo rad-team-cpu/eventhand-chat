@@ -1,5 +1,5 @@
 import { Db, Filter, FindOptions, ObjectId } from 'mongodb';
-import Message from '@src/models/message';
+import { Message, MessageList } from '@src/models/message';
 import mongoDbClient from '@database/mongodb';
 import { GetMessagesInput, MessageInput } from '@src/models/socketInputs';
 import { Chat } from '@src/models/chat';
@@ -40,17 +40,21 @@ const findMessagesByChatId = async (
         sort: { createdAt: -1 },
     };
 
-    const documents = messageCollection.find(messagesFilter, options).toArray();
+    const documents = await messageCollection
+        .find(messagesFilter, options)
+        .toArray();
     const totalDocuments =
         await messageCollection.countDocuments(messagesFilter);
     const totalPages = Math.ceil(totalDocuments / pageSize);
 
-    return {
+    const result: MessageList = {
         documents,
         totalPages,
         currentPage: pageNumber,
         hasMore: pageNumber < totalPages,
     };
+
+    return result;
 };
 
 const createMessage = async (

@@ -18,7 +18,8 @@ import {
 } from './models/socketInputs';
 import { findMessagesByChatId } from './services/message';
 import { ChatList } from './models/chat';
-import { ChatListOutput } from './models/socketOutputs';
+import { ChatListOutput, GetMessagesOutput } from './models/socketOutputs';
+import { MessageList } from './models/message';
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -169,10 +170,16 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     );
                 } else if (parsedMessaged.inputType === 'GET_MESSAGES') {
                     const getMessagesInput = parsedMessaged as GetMessagesInput;
-                    const messages =
+                    console.log(getMessagesInput);
+                    const messages: MessageList =
                         await findMessagesByChatId(getMessagesInput);
 
-                    ws.send(JSON.stringify(messages));
+                    const output: GetMessagesOutput = {
+                        messageList: messages,
+                        outputType: 'GET_MESSAGES',
+                    };
+
+                    ws.send(JSON.stringify(output));
                     console.log(
                         `Successfully sent messages from CHAT ID:${getMessagesInput.chatId}`
                     );

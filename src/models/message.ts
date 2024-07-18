@@ -1,4 +1,4 @@
-import { ObjectId } from 'mongodb';
+import { ObjectId, WithId } from 'mongodb';
 
 type Message = {
     _id: ObjectId;
@@ -9,4 +9,11 @@ type Message = {
     updatedAt?: Date;
 };
 
-export default Message;
+type MessageList = {
+    documents: Document[] | WithId<Message>[];
+    totalPages: number;
+    currentPage: number;
+    hasMore: boolean;
+};
+
+export { Message, MessageList };

@@ -92,7 +92,8 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
                 if (parsedMessaged.inputType == 'SEND_MESSAGE') {
                     const messageInput = parsedMessaged as MessageInput;
-                    const { receiverId, timestamp } = messageInput;
+                    const { senderId, senderType, receiverId, timestamp } =
+                        messageInput;
 
                     await createOrPushToChat({
                         ...messageInput,
@@ -100,6 +101,42 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     });
 
                     console.log('Chat message recieved and saved to database');
+
+                    const chatListInput: GetChatListInput = {
+                        senderId,
+                        senderType,
+                        inputType: 'GET_CHAT_LIST',
+                        pageNumber: 1,
+                        pageSize: 10,
+                    };
+
+                    let chatList: ChatList | undefined = undefined;
+
+                    if (senderType === 'CLIENT') {
+                        chatList =
+                            await findClientChatListByClientId(chatListInput);
+                    }
+
+                    if (senderType === 'VENDOR') {
+                        chatList =
+                            await findVendorChatListByVendorId(chatListInput);
+                    }
+
+                    if (!chatList) {
+                        throw new Error(
+                            'Chat list parsedMessaged failed to load'
+                        );
+                    }
+
+                    const output: ChatListOutput = {
+                        chatList,
+                        outputType: 'GET_CHAT_LIST',
+                    };
+
+                    ws.send(JSON.stringify(output));
+                    console.log(
+                        `Successfully updated chat list ${senderType}:${senderId}`
+                    );
 
                     const receiverWs = connections.get(receiverId);
 
@@ -170,7 +207,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     );
                 } else if (parsedMessaged.inputType === 'GET_MESSAGES') {
                     const getMessagesInput = parsedMessaged as GetMessagesInput;
-                    console.log(getMessagesInput);
+
                     const messages: MessageList =
                         await findMessagesByUsers(getMessagesInput);
 

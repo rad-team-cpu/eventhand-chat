@@ -128,8 +128,6 @@ const createMessage = async (
 ) => {
     const { senderId, content, timestamp, isImage } = data;
 
-    console.log(data);
-
     const collection = database.collection('messages');
 
     const document: Message = {

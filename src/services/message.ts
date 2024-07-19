@@ -6,29 +6,94 @@ import { Chat } from '@src/models/chat';
 
 const mongoDatabase = mongoDbClient().db();
 
-const findMessagesByChatId = async (
+// const findMessagesByChatId = async (
+//     data: GetMessagesInput,
+//     database: Db = mongoDatabase
+// ) => {
+//     const { chatId, pageNumber, pageSize } = data;
+
+//     const chatCollection = database.collection<Chat>('chats');
+
+//     const skip = (pageNumber - 1) * pageSize;
+//     const limit = pageSize;
+
+//     const chatFilter: Filter<Chat> = { _id: new ObjectId(chatId) };
+//     const projection = { _id: 0, messages: 1 };
+
+//     const chatDocument = await chatCollection.findOne(chatFilter, {
+//         projection,
+//     });
+
+//     if (!chatDocument) {
+//         throw new Error('Chat not found');
+//     }
+
+//     const { messages } = chatDocument;
+
+//     const messageCollection = database.collection<Message>('messages');
+
+//     const messagesFilter: Filter<Message> = { _id: { $in: messages } };
+
+//     const options: FindOptions = {
+//         skip: skip,
+//         limit: limit,
+//         sort: { createdAt: -1 },
+//     };
+
+//     const documents = await messageCollection
+//         .find(messagesFilter, options)
+//         .toArray();
+//     const totalDocuments =
+//         await messageCollection.countDocuments(messagesFilter);
+//     const totalPages = Math.ceil(totalDocuments / pageSize);
+
+//     const result: MessageList = {
+//         documents,
+//         totalPages,
+//         currentPage: pageNumber,
+//         hasMore: pageNumber < totalPages,
+//     };
+
+//     return result;
+// };
+
+const findMessagesByUsers = async (
     data: GetMessagesInput,
     database: Db = mongoDatabase
 ) => {
-    const { chatId, pageNumber, pageSize } = data;
+    const { senderId, receiverId, senderType, pageNumber, pageSize } = data;
 
     const chatCollection = database.collection<Chat>('chats');
 
-    const skip = (pageNumber - 1) * pageSize;
-    const limit = pageSize;
+    const userId = senderType == 'CLIENT' ? senderId : receiverId;
 
-    const chatFilter: Filter<Chat> = { _id: new ObjectId(chatId) };
+    const vendorId = senderType == 'VENDOR' ? senderId : receiverId;
+
+    const chatFilter: Filter<Chat> = {
+        user: { _id: userId },
+        vendor: { _id: vendorId },
+    };
     const projection = { _id: 0, messages: 1 };
 
     const chatDocument = await chatCollection.findOne(chatFilter, {
         projection,
     });
 
-    if (!chatDocument) {
-        throw new Error('Chat not found');
+    if (!chatDocument || chatDocument == null) {
+        const result: MessageList = {
+            documents: [],
+            totalPages: 0,
+            currentPage: pageNumber,
+            hasMore: false,
+        };
+
+        return result;
     }
 
     const { messages } = chatDocument;
+
+    const skip = (pageNumber - 1) * pageSize;
+    const limit = pageSize;
 
     const messageCollection = database.collection<Message>('messages');
 
@@ -80,4 +145,4 @@ const createMessage = async (
     return result;
 };
 
-export { createMessage, findMessagesByChatId };
+export { createMessage, findMessagesByUsers };

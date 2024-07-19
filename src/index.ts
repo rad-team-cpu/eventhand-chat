@@ -15,7 +15,7 @@ import {
     RegisterInput,
     SwitchInput,
 } from './models/socketInputs';
-import { findMessagesByChatId } from './services/message';
+import { findMessagesByUsers } from './services/message';
 import { ChatList } from './models/chat';
 import { ChatListOutput, GetMessagesOutput } from './models/socketOutputs';
 import { MessageList } from './models/message';
@@ -169,7 +169,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     const getMessagesInput = parsedMessaged as GetMessagesInput;
                     console.log(getMessagesInput);
                     const messages: MessageList =
-                        await findMessagesByChatId(getMessagesInput);
+                        await findMessagesByUsers(getMessagesInput);
 
                     const output: GetMessagesOutput = {
                         messageList: messages,
@@ -177,9 +177,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     };
 
                     ws.send(JSON.stringify(output));
-                    console.log(
-                        `Successfully sent messages from CHAT ID:${getMessagesInput.chatId}`
-                    );
+                    console.log(`SUCCESSFULLY SENT CHAT MESSAGES`);
                 } else if (parsedMessaged.inputType === 'SWITCH') {
                     const switchInput = parsedMessaged as SwitchInput;
                     const { senderId, senderType } = switchInput;

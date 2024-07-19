@@ -256,14 +256,21 @@ const pushMessageToChat = async (
     data: MessageInput,
     database: Db = mongoDatabase
 ) => {
-    const { chatId } = data;
+    const { senderType, senderId, receiverId } = data;
 
     const message = await createMessage(data);
     const messageId = message.insertedId;
 
     const collection = database.collection<Chat>('chats');
 
-    const filter: Filter<Chat> = { _id: new ObjectId(chatId) };
+    const userId = senderType == 'CLIENT' ? senderId : receiverId;
+
+    const vendorId = senderType == 'VENDOR' ? senderId : receiverId;
+
+    const filter: Filter<Chat> = {
+        user: { _id: userId },
+        vendor: { _id: vendorId },
+    };
 
     const updatefilter: UpdateFilter<Chat> = {
         $push: { messages: messageId },
@@ -279,7 +286,7 @@ const createOrPushToChat = async (
     data: MessageInput,
     database: Db = mongoDatabase
 ) => {
-    const chat = await findChatById(data, database);
+    const chat = await findChatByUsers(data, database);
 
     if (chat === null) {
         return await createChat(data, database);

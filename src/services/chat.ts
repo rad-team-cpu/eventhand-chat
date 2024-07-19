@@ -34,12 +34,11 @@ const findChatByUsers = async (
     const vendorId = senderType == 'VENDOR' ? senderId : receiverId;
 
     const filter: Filter<Chat> = {
-        user: { _id: userId },
-        vendor: { _id: vendorId },
+        user: new ObjectId(userId),
+        vendor: new ObjectId(vendorId),
     };
 
     const chat = await collection.findOne<Chat>(filter);
-
     return chat;
 };
 
@@ -90,14 +89,17 @@ const findClientChatListByClientId = async (
             },
         },
         {
-            $unwind: '$vendorDetails',
+            $unwind: {
+                path: '$vendorDetails',
+                preserveNullAndEmptyArrays: true,
+            },
         },
         {
             $project: {
                 id: '$_id',
                 latestMessage: '$latestMessage.content',
                 timestamp: '$latestMessage.timestamp',
-                senderid: '$vendorDetails._id',
+                senderId: '$vendorDetails._id',
                 senderName: '$vendorDetails.name',
                 senderImage: '$vendorDetails.logo',
             },
@@ -225,18 +227,18 @@ const createChat = async (data: MessageInput, database: Db = mongoDatabase) => {
     const message = await createMessage(data);
     const messageId = message.insertedId;
 
-    const { senderId, senderName, receiverId, receiverName, senderType } = data;
+    const { senderId, receiverId, senderType } = data;
 
     const collection = database.collection<Chat>('chats');
 
     const user =
         senderType == 'CLIENT'
-            ? { _id: new ObjectId(senderId), name: senderName }
-            : { _id: new ObjectId(receiverId), name: receiverName };
+            ? new ObjectId(senderId)
+            : new ObjectId(receiverId);
     const vendor =
         senderType == 'VENDOR'
-            ? { _id: new ObjectId(senderId), name: senderName }
-            : { _id: new ObjectId(receiverId), name: receiverName };
+            ? new ObjectId(senderId)
+            : new ObjectId(receiverId);
 
     const document: Chat = {
         _id: new ObjectId(),
@@ -268,8 +270,8 @@ const pushMessageToChat = async (
     const vendorId = senderType == 'VENDOR' ? senderId : receiverId;
 
     const filter: Filter<Chat> = {
-        user: { _id: userId },
-        vendor: { _id: vendorId },
+        user: new ObjectId(userId),
+        vendor: new ObjectId(vendorId),
     };
 
     const updatefilter: UpdateFilter<Chat> = {

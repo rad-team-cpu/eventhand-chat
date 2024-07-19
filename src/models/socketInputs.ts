@@ -24,9 +24,7 @@ const messageInputSchema = z.intersection(
     registerInputTypeSchema,
     z.object({
         chatId: z.coerce.string(),
-        senderName: z.coerce.string(),
         receiverId: z.coerce.string(),
-        receiverName: z.coerce.string(),
         content: z.coerce.string(),
         timestamp: z.coerce.date(),
         isImage: z.coerce.boolean().optional(),

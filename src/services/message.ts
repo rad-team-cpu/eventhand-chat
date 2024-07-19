@@ -70,12 +70,12 @@ const findMessagesByUsers = async (
     const vendorId = senderType == 'VENDOR' ? senderId : receiverId;
 
     const chatFilter: Filter<Chat> = {
-        user: { _id: userId },
-        vendor: { _id: vendorId },
+        user: new ObjectId(userId),
+        vendor: new ObjectId(vendorId),
     };
     const projection = { _id: 0, messages: 1 };
 
-    const chatDocument = await chatCollection.findOne(chatFilter, {
+    const chatDocument = await chatCollection.findOne<Chat>(chatFilter, {
         projection,
     });
 
@@ -127,6 +127,8 @@ const createMessage = async (
     database: Db = mongoDatabase
 ) => {
     const { senderId, content, timestamp, isImage } = data;
+
+    console.log(data);
 
     const collection = database.collection('messages');
 

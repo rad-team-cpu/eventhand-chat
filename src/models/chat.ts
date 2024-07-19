@@ -1,10 +1,9 @@
-import User from './user';
 import { ObjectId, Document } from 'mongodb';
 
 type Chat = {
     _id: ObjectId;
-    user: User;
-    vendor: User;
+    user: ObjectId;
+    vendor: ObjectId;
     messages: ObjectId[];
     createdAt: Date;
     updatedAt: Date;

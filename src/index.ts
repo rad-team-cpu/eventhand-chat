@@ -92,9 +92,12 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
                 if (parsedMessaged.inputType == 'SEND_MESSAGE') {
                     const messageInput = parsedMessaged as MessageInput;
-                    const { receiverId } = messageInput;
+                    const { receiverId, timestamp } = messageInput;
 
-                    await createOrPushToChat(messageInput);
+                    await createOrPushToChat({
+                        ...messageInput,
+                        timestamp: new Date(timestamp),
+                    });
 
                     console.log('Chat message recieved and saved to database');
 

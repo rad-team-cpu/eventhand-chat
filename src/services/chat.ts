@@ -98,6 +98,7 @@ const findClientChatListByClientId = async (
             $project: {
                 id: '$_id',
                 latestMessage: '$latestMessage.content',
+                isImage: '$latestMessage.isImage',
                 timestamp: '$latestMessage.timestamp',
                 senderId: '$vendorDetails._id',
                 senderName: '$vendorDetails.name',

@@ -149,7 +149,7 @@ const findVendorChatListByVendorId = async (
     const pipeline = [
         {
             $match: {
-                'vendor.id': new ObjectId(vendorId),
+                vendor: new ObjectId(vendorId),
             },
         },
         {
@@ -173,7 +173,7 @@ const findVendorChatListByVendorId = async (
         {
             $lookup: {
                 from: 'users',
-                localField: 'user.id',
+                localField: 'user',
                 foreignField: '_id',
                 as: 'userDetails',
             },
@@ -186,6 +186,7 @@ const findVendorChatListByVendorId = async (
                 id: '$_id',
                 latestMessage: '$latestMessage.content',
                 timestamp: '$latestMessage.timestamp',
+                isImage: '$latestMessage.isImage',
                 senderId: '$userDetails._id',
                 name: {
                     $concat: [
@@ -194,7 +195,7 @@ const findVendorChatListByVendorId = async (
                         '$userDetails.lastName',
                     ],
                 },
-                profilePicture: '$userDetails.profilePicture',
+                senderImage: '$userDetails.profilePicture',
             },
         },
         {

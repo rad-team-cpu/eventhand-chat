@@ -106,17 +106,21 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     }
                 }
 
+                console.log(connections.forEach((e, key) => console.log(key)));
+
                 if (parsedMessaged.inputType == 'SEND_MESSAGE') {
                     const messageInput = parsedMessaged as MessageInput;
                     const { senderId, senderType, receiverId, timestamp } =
                         messageInput;
 
-                    await createOrPushToChat({
+                    const messageId = await createOrPushToChat({
                         ...messageInput,
                         timestamp: new Date(timestamp),
                     });
 
-                    console.log('Chat message recieved and saved to database');
+                    console.log(
+                        `Chat message ${messageId} recieved and saved to database`
+                    );
 
                     const chatListInput: GetChatListInput = {
                         senderId,
@@ -157,24 +161,45 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     const receiverWs = connections.get(receiverId);
 
                     if (receiverWs && receiverWs.readyState === 1) {
-                        const receiverMessage = JSON.stringify(messageInput);
+                        const chatListInput: GetChatListInput = {
+                            senderId: receiverId,
+                            senderType:
+                                senderType === 'CLIENT' ? 'CLIENT' : 'VENDOR',
+                            inputType: 'GET_CHAT_LIST',
+                            pageNumber: 1,
+                            pageSize: 10,
+                        };
 
-                        receiverWs.send(receiverMessage, (err) => {
-                            console.error(
-                                'Error has occured while sending:',
-                                err
+                        let receiverChatList: ChatList | undefined = undefined;
+
+                        if (senderType === 'CLIENT') {
+                            receiverChatList =
+                                await findVendorChatListByVendorId(
+                                    chatListInput
+                                );
+                        }
+
+                        if (senderType === 'VENDOR') {
+                            receiverChatList =
+                                await findClientChatListByClientId(
+                                    chatListInput
+                                );
+                        }
+
+                        if (!receiverChatList) {
+                            throw new Error(
+                                'Chat list parsedMessaged failed to load'
                             );
-                            const status = JSON.stringify({ status: 'ERROR' });
-                            ws.send(status);
-                            return;
-                        });
+                        }
 
-                        const status = JSON.stringify({ status: 'SENT' });
+                        const output: ChatListOutput = {
+                            chatList: receiverChatList,
+                            outputType: 'GET_CHAT_LIST',
+                        };
 
-                        ws.send(status);
-
+                        ws.send(JSON.stringify(output));
                         console.log(
-                            `Message successfully sent to RECIEVER:${receiverId}`
+                            `Successfully updated RECEIVER CHAT LIST: ${receiverId}`
                         );
                     }
                 } else if (parsedMessaged.inputType === 'GET_CHAT_LIST') {

@@ -1,6 +1,8 @@
 import { ChatList } from './chat';
-import { MessageList } from './message';
+import { Message, MessageList } from './message';
 import { SocketInputType } from './socketInputs';
+
+type SocketOutputType = SocketInputType | 'CHAT_MESSAGE_RECIEVED';
 
 type SocketOutputStatus = {
     status: 'SUCCESS' | 'ERROR';
@@ -16,4 +18,14 @@ type GetMessagesOutput = {
     outputType: SocketInputType;
 };
 
-export { SocketOutputStatus, ChatListOutput, GetMessagesOutput };
+type SendMessageOutput = {
+    message: Message;
+    outputType: SocketOutputType;
+};
+
+export {
+    SocketOutputStatus,
+    ChatListOutput,
+    GetMessagesOutput,
+    SendMessageOutput,
+};

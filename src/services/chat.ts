@@ -1,4 +1,11 @@
-import { Db, Filter, ObjectId, UpdateFilter } from 'mongodb';
+import {
+    Db,
+    Filter,
+    InsertOneResult,
+    ObjectId,
+    UpdateFilter,
+    UpdateResult,
+} from 'mongodb';
 import mongoDbClient from '@database/mongodb';
 import { Chat, ChatList } from '@src/models/chat';
 import { createMessage } from './message';
@@ -225,10 +232,11 @@ const findVendorChatListByVendorId = async (
     return result;
 };
 
-const createChat = async (data: MessageInput, database: Db = mongoDatabase) => {
-    const message = await createMessage(data);
-    const messageId = message.insertedId;
-
+const createChat = async (
+    messageId: ObjectId,
+    data: MessageInput,
+    database: Db = mongoDatabase
+) => {
     const { senderId, receiverId, senderType } = data;
 
     const collection = database.collection<Chat>('chats');
@@ -257,13 +265,11 @@ const createChat = async (data: MessageInput, database: Db = mongoDatabase) => {
 };
 
 const pushMessageToChat = async (
+    messageId: ObjectId,
     data: MessageInput,
     database: Db = mongoDatabase
 ) => {
     const { senderType, senderId, receiverId } = data;
-
-    const message = await createMessage(data);
-    const messageId = message.insertedId;
 
     const collection = database.collection<Chat>('chats');
 
@@ -290,13 +296,23 @@ const createOrPushToChat = async (
     data: MessageInput,
     database: Db = mongoDatabase
 ) => {
+    const message = await createMessage(data);
+    const messageId = message.insertedId;
+    let result: InsertOneResult<Chat> | UpdateResult<Chat>;
+
     const chat = await findChatByUsers(data, database);
 
     if (chat === null) {
-        return await createChat(data, database);
+        result = await createChat(messageId, data, database);
+    } else {
+        result = await pushMessageToChat(messageId, data, database);
     }
 
-    return await pushMessageToChat(data, database);
+    if (!result.acknowledged) {
+        throw Error('Message Creation Failed');
+    }
+
+    return messageId;
 };
 
 export {

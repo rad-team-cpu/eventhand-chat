@@ -18,7 +18,7 @@ import {
 import { findMessagesByUsers } from './services/message';
 import { ChatList } from './models/chat';
 import { ChatListOutput, GetMessagesOutput } from './models/socketOutputs';
-import { MessageList } from './models/message';
+import { Message, MessageList } from './models/message';
 
 const port = Number(process.env.PORT) || 3000;
 
@@ -110,8 +110,14 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
                 if (parsedMessaged.inputType == 'SEND_MESSAGE') {
                     const messageInput = parsedMessaged as MessageInput;
-                    const { senderId, senderType, receiverId, timestamp } =
-                        messageInput;
+                    const {
+                        senderId,
+                        senderType,
+                        receiverId,
+                        timestamp,
+                        content,
+                        isImage,
+                    } = messageInput;
 
                     const messageId = await createOrPushToChat({
                         ...messageInput,
@@ -161,10 +167,12 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     const receiverWs = connections.get(receiverId);
 
                     if (receiverWs && receiverWs.readyState === 1) {
+                        const receiverType =
+                            senderType === 'CLIENT' ? 'VENDOR' : 'CLIENT';
+
                         const chatListInput: GetChatListInput = {
                             senderId: receiverId,
-                            senderType:
-                                senderType === 'CLIENT' ? 'CLIENT' : 'VENDOR',
+                            senderType: receiverType,
                             inputType: 'GET_CHAT_LIST',
                             pageNumber: 1,
                             pageSize: 10,
@@ -192,14 +200,32 @@ wsServer.on('connection', async (ws: Socket, req) => {
                             );
                         }
 
-                        const output: ChatListOutput = {
+                        const receiverChatListOutput: ChatListOutput = {
                             chatList: receiverChatList,
                             outputType: 'GET_CHAT_LIST',
                         };
 
-                        ws.send(JSON.stringify(output));
+                        receiverWs.send(JSON.stringify(receiverChatListOutput));
                         console.log(
                             `Successfully updated RECEIVER CHAT LIST: ${receiverId}`
+                        );
+
+                        const receiverMessage: Message = {
+                            _id: messageId,
+                            senderId: receiverId,
+                            content,
+                            timestamp: new Date(timestamp),
+                            isImage,
+                        };
+
+                        const receiverMessageOutput = {
+                            message: receiverMessage,
+                            outputType: 'CHAT_MESSAGE_RECEIVED',
+                        };
+
+                        receiverWs.send(JSON.stringify(receiverMessageOutput));
+                        console.log(
+                            `SUCCESSFULLY SENT MESSAGE TO RECEIVER: ${receiverId}`
                         );
                     }
                 } else if (parsedMessaged.inputType === 'GET_CHAT_LIST') {

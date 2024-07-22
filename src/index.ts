@@ -164,7 +164,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
                         const chatListInput: GetChatListInput = {
                             senderId: receiverId,
                             senderType:
-                                senderType === 'CLIENT' ? 'CLIENT' : 'VENDOR',
+                                senderType === 'CLIENT' ? 'VENDOR' : 'CLIENT',
                             inputType: 'GET_CHAT_LIST',
                             pageNumber: 1,
                             pageSize: 10,

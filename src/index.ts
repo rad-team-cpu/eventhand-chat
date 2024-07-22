@@ -90,6 +90,22 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     console.log(`User connected: ${senderType}: ${senderId}`);
                 }
 
+                if (parsedMessaged.inputType === 'SWITCH') {
+                    const switchInput = parsedMessaged as SwitchInput;
+                    const { senderId, senderType } = switchInput;
+
+                    for (const [userId] of connections.entries()) {
+                        if (userId === senderId) {
+                            connections.delete(userId);
+
+                            const switchedType =
+                                senderType === 'CLIENT' ? 'VENDOR' : 'CLIENT';
+                            console.log(`${senderType} to ${switchedType}`);
+                            break;
+                        }
+                    }
+                }
+
                 if (parsedMessaged.inputType == 'SEND_MESSAGE') {
                     const messageInput = parsedMessaged as MessageInput;
                     const { senderId, senderType, receiverId, timestamp } =
@@ -218,20 +234,6 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
                     ws.send(JSON.stringify(output));
                     console.log(`SUCCESSFULLY SENT CHAT MESSAGES`);
-                } else if (parsedMessaged.inputType === 'SWITCH') {
-                    const switchInput = parsedMessaged as SwitchInput;
-                    const { senderId, senderType } = switchInput;
-
-                    for (const [userId] of connections.entries()) {
-                        if (userId === senderId) {
-                            connections.delete(userId);
-
-                            const switchedType =
-                                senderType === 'CLIENT' ? 'VENDOR' : 'CLIENT';
-                            console.log(`${senderType} to ${switchedType}`);
-                            break;
-                        }
-                    }
                 }
             } catch (error) {
                 console.error(error);

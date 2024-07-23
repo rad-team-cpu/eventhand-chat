@@ -14,11 +14,10 @@ import {
     RegisterInput,
     SwitchInput,
 } from './models/socketInputs';
-import { findMessagesByUsers } from './services/message';
 import { ChatList } from './models/chat';
-import { ChatListOutput, GetMessagesOutput } from './models/socketOutputs';
-import { MessageList } from './models/message';
+import { ChatListOutput } from './models/socketOutputs';
 import sendChatMessage from './controllers/sendChatMessage';
+import getMessages from './controllers/getMessages';
 
 export interface Socket extends WebSocket {
     isAlive?: boolean;
@@ -157,17 +156,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     );
                 } else if (parsedMessaged.inputType === 'GET_MESSAGES') {
                     const getMessagesInput = parsedMessaged as GetMessagesInput;
-
-                    const messages: MessageList =
-                        await findMessagesByUsers(getMessagesInput);
-
-                    const output: GetMessagesOutput = {
-                        messageList: messages,
-                        outputType: 'GET_MESSAGES',
-                    };
-
-                    ws.send(JSON.stringify(output));
-                    console.log(`SUCCESSFULLY SENT CHAT MESSAGES`);
+                    await getMessages(getMessagesInput, ws);
                 }
             } catch (error) {
                 console.error(error);

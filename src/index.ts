@@ -212,7 +212,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
                         const receiverMessage: Message = {
                             _id: messageId,
-                            senderId: receiverId,
+                            senderId: senderId,
                             content,
                             timestamp: new Date(timestamp),
                             isImage,

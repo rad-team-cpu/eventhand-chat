@@ -2,7 +2,7 @@ import { ChatList } from './chat';
 import { Message, MessageList } from './message';
 import { SocketInputType } from './socketInputs';
 
-type SocketOutputType = SocketInputType | 'CHAT_MESSAGE_RECIEVED';
+type SocketOutputType = SocketInputType | 'CHAT_MESSAGE_RECEIVED';
 
 type SocketOutputStatus = {
     status: 'SUCCESS' | 'ERROR';

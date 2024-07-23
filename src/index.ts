@@ -2,7 +2,6 @@
 import 'dotenv/config';
 import mongoDbClient from '@database/mongodb';
 import {
-    createOrPushToChat,
     findClientChatListByClientId,
     findVendorChatListByVendorId,
 } from '@src/services/chat';
@@ -18,23 +17,24 @@ import {
 import { findMessagesByUsers } from './services/message';
 import { ChatList } from './models/chat';
 import { ChatListOutput, GetMessagesOutput } from './models/socketOutputs';
-import { Message, MessageList } from './models/message';
+import { MessageList } from './models/message';
+import sendChatMessage from './controllers/sendChatMessage';
+
+export interface Socket extends WebSocket {
+    isAlive?: boolean;
+}
 
 const port = Number(process.env.PORT) || 3000;
 
 const wsServer = new WebSocketServer({ port });
 
-const connections = new Map<string, WebSocket>();
+const connections = new Map<string, Socket>();
 
 mongoDbClient()
     .on('serverOpening', () => console.log('DB Connected'))
     .on('serverClosed', () => console.log('DB Disconnected'))
     .on('error', (error) => console.log('An Error has Occured:', error))
     .connect();
-
-interface Socket extends WebSocket {
-    isAlive?: boolean;
-}
 
 const heartbeatInterval = 30000; // Interval in milliseconds
 
@@ -110,124 +110,7 @@ wsServer.on('connection', async (ws: Socket, req) => {
 
                 if (parsedMessaged.inputType == 'SEND_MESSAGE') {
                     const messageInput = parsedMessaged as MessageInput;
-                    const {
-                        senderId,
-                        senderType,
-                        receiverId,
-                        timestamp,
-                        content,
-                        isImage,
-                    } = messageInput;
-
-                    const messageId = await createOrPushToChat({
-                        ...messageInput,
-                        timestamp: new Date(timestamp),
-                    });
-
-                    console.log(
-                        `Chat message ${messageId} recieved and saved to database`
-                    );
-
-                    const chatListInput: GetChatListInput = {
-                        senderId,
-                        senderType,
-                        inputType: 'GET_CHAT_LIST',
-                        pageNumber: 1,
-                        pageSize: 10,
-                    };
-
-                    let chatList: ChatList | undefined = undefined;
-
-                    if (senderType === 'CLIENT') {
-                        chatList =
-                            await findClientChatListByClientId(chatListInput);
-                    }
-
-                    if (senderType === 'VENDOR') {
-                        chatList =
-                            await findVendorChatListByVendorId(chatListInput);
-                    }
-
-                    if (!chatList) {
-                        throw new Error(
-                            'Chat list parsedMessaged failed to load'
-                        );
-                    }
-
-                    const output: ChatListOutput = {
-                        chatList,
-                        outputType: 'GET_CHAT_LIST',
-                    };
-
-                    ws.send(JSON.stringify(output));
-                    console.log(
-                        `Successfully updated chat list ${senderType}:${senderId}`
-                    );
-
-                    const receiverWs = connections.get(receiverId);
-
-                    if (receiverWs && receiverWs.readyState === 1) {
-                        const receiverType =
-                            senderType === 'CLIENT' ? 'VENDOR' : 'CLIENT';
-
-                        const chatListInput: GetChatListInput = {
-                            senderId: receiverId,
-                            senderType: receiverType,
-                            inputType: 'GET_CHAT_LIST',
-                            pageNumber: 1,
-                            pageSize: 10,
-                        };
-
-                        let receiverChatList: ChatList | undefined = undefined;
-
-                        if (senderType === 'CLIENT') {
-                            receiverChatList =
-                                await findVendorChatListByVendorId(
-                                    chatListInput
-                                );
-                        }
-
-                        if (senderType === 'VENDOR') {
-                            receiverChatList =
-                                await findClientChatListByClientId(
-                                    chatListInput
-                                );
-                        }
-
-                        if (!receiverChatList) {
-                            throw new Error(
-                                'Chat list parsedMessaged failed to load'
-                            );
-                        }
-
-                        const receiverChatListOutput: ChatListOutput = {
-                            chatList: receiverChatList,
-                            outputType: 'GET_CHAT_LIST',
-                        };
-
-                        receiverWs.send(JSON.stringify(receiverChatListOutput));
-                        console.log(
-                            `Successfully updated RECEIVER CHAT LIST: ${receiverId}`
-                        );
-
-                        const receiverMessage: Message = {
-                            _id: messageId,
-                            senderId: senderId,
-                            content,
-                            timestamp: new Date(timestamp),
-                            isImage,
-                        };
-
-                        const receiverMessageOutput = {
-                            message: receiverMessage,
-                            outputType: 'CHAT_MESSAGE_RECEIVED',
-                        };
-
-                        receiverWs.send(JSON.stringify(receiverMessageOutput));
-                        console.log(
-                            `SUCCESSFULLY SENT MESSAGE TO RECEIVER: ${receiverId}`
-                        );
-                    }
+                    await sendChatMessage(messageInput, ws, connections);
                 } else if (parsedMessaged.inputType === 'GET_CHAT_LIST') {
                     const {
                         senderId,

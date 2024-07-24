@@ -100,12 +100,13 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     }
                 }
 
-                console.log(connections.forEach((e, key) => console.log(key)));
-
                 if (parsedMessaged.inputType == 'SEND_MESSAGE') {
                     const messageInput = parsedMessaged as MessageInput;
                     await sendChatMessage(messageInput, ws, connections);
-                } else if (parsedMessaged.inputType === 'GET_CHAT_LIST') {
+                } else if (
+                    parsedMessaged.inputType === 'GET_CHAT_LIST' ||
+                    parsedMessaged.inputType === 'GET_MORE_CHAT_LIST'
+                ) {
                     const getChatListInput = parsedMessaged as GetChatListInput;
                     await getChatList(getChatListInput, ws);
                 } else if (

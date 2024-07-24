@@ -8,7 +8,7 @@ import {
 } from '@src/services/chat';
 
 const getChatList = async (input: GetChatListInput, ws: Socket) => {
-    const { senderId, senderType } = input;
+    const { senderId, senderType, inputType } = input;
 
     let chatList: ChatList | undefined = undefined;
 
@@ -24,9 +24,14 @@ const getChatList = async (input: GetChatListInput, ws: Socket) => {
         throw new Error('Chat list parsedMessaged failed to load');
     }
 
+    const outputType =
+        inputType === 'GET_MORE_CHAT_LIST'
+            ? 'GET_MORE_CHAT_LIST'
+            : 'GET_CHAT_LIST';
+
     const output: ChatListOutput = {
         chatList,
-        outputType: 'GET_CHAT_LIST',
+        outputType,
     };
 
     ws.send(JSON.stringify(output));

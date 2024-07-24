@@ -37,6 +37,9 @@ const heartbeat = (wss: WebSocketServer, interval: number) => {
         wsServer.clients.forEach((ws: Socket) => {
             if (!ws.isAlive) {
                 // Terminate the connection if client didn't respond to the last heartbeat
+                console.log(
+                    'A WEBSOCKET IS NOT RESPONDING: TERMINATING CONNECTION'
+                );
                 return ws.terminate();
             }
 

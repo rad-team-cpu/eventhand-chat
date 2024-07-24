@@ -108,7 +108,10 @@ wsServer.on('connection', async (ws: Socket, req) => {
                 } else if (parsedMessaged.inputType === 'GET_CHAT_LIST') {
                     const getChatListInput = parsedMessaged as GetChatListInput;
                     await getChatList(getChatListInput, ws);
-                } else if (parsedMessaged.inputType === 'GET_MESSAGES') {
+                } else if (
+                    parsedMessaged.inputType === 'GET_MESSAGES' ||
+                    parsedMessaged.inputType === 'GET_EARLIER_MESSAGES'
+                ) {
                     const getMessagesInput = parsedMessaged as GetMessagesInput;
                     await getMessages(getMessagesInput, ws);
                 }

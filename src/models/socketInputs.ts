@@ -6,6 +6,7 @@ const socketInputTypeSchema = z.union([
     z.literal('GET_MESSAGES'),
     z.literal('GET_CHAT_LIST'),
     z.literal('SWITCH'),
+    z.literal('GET_EARLIER_MESSAGES'),
 ]);
 
 type SocketInputType = z.infer<typeof socketInputTypeSchema>;

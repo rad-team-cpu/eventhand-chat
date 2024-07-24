@@ -24,6 +24,7 @@ type SendMessageOutput = {
 };
 
 export {
+    SocketOutputType,
     SocketOutputStatus,
     ChatListOutput,
     GetMessagesOutput,

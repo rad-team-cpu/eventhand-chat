@@ -1,10 +1,6 @@
 // import 'dotenv/config';
 import 'dotenv/config';
 import mongoDbClient from '@database/mongodb';
-import {
-    findClientChatListByClientId,
-    findVendorChatListByVendorId,
-} from '@src/services/chat';
 import WebSocket, { WebSocketServer } from 'ws';
 import verifyClerkToken from './middleware/verifyToken';
 import {
@@ -14,10 +10,9 @@ import {
     RegisterInput,
     SwitchInput,
 } from './models/socketInputs';
-import { ChatList } from './models/chat';
-import { ChatListOutput } from './models/socketOutputs';
 import sendChatMessage from './controllers/sendChatMessage';
 import getMessages from './controllers/getMessages';
+import getChatList from './controllers/getChatList';
 
 export interface Socket extends WebSocket {
     isAlive?: boolean;
@@ -42,6 +37,9 @@ const heartbeat = (wss: WebSocketServer, interval: number) => {
         wsServer.clients.forEach((ws: Socket) => {
             if (!ws.isAlive) {
                 // Terminate the connection if client didn't respond to the last heartbeat
+                console.log(
+                    'A WEBSOCKET IS NOT RESPONDING: TERMINATING CONNECTION'
+                );
                 return ws.terminate();
             }
 
@@ -105,56 +103,19 @@ wsServer.on('connection', async (ws: Socket, req) => {
                     }
                 }
 
-                console.log(connections.forEach((e, key) => console.log(key)));
-
                 if (parsedMessaged.inputType == 'SEND_MESSAGE') {
                     const messageInput = parsedMessaged as MessageInput;
                     await sendChatMessage(messageInput, ws, connections);
-                } else if (parsedMessaged.inputType === 'GET_CHAT_LIST') {
-                    const {
-                        senderId,
-                        senderType,
-                        inputType,
-                        pageSize,
-                        pageNumber,
-                    } = parsedMessaged as GetChatListInput;
-
-                    const chatListInput: GetChatListInput = {
-                        senderId,
-                        senderType,
-                        inputType,
-                        pageNumber,
-                        pageSize,
-                    };
-
-                    let chatList: ChatList | undefined = undefined;
-
-                    if (senderType === 'CLIENT') {
-                        chatList =
-                            await findClientChatListByClientId(chatListInput);
-                    }
-
-                    if (senderType === 'VENDOR') {
-                        chatList =
-                            await findVendorChatListByVendorId(chatListInput);
-                    }
-
-                    if (!chatList) {
-                        throw new Error(
-                            'Chat list parsedMessaged failed to load'
-                        );
-                    }
-
-                    const output: ChatListOutput = {
-                        chatList,
-                        outputType: 'GET_CHAT_LIST',
-                    };
-
-                    ws.send(JSON.stringify(output));
-                    console.log(
-                        `Successfully sent chat list ${senderType}:${senderId}`
-                    );
-                } else if (parsedMessaged.inputType === 'GET_MESSAGES') {
+                } else if (
+                    parsedMessaged.inputType === 'GET_CHAT_LIST' ||
+                    parsedMessaged.inputType === 'GET_MORE_CHAT_LIST'
+                ) {
+                    const getChatListInput = parsedMessaged as GetChatListInput;
+                    await getChatList(getChatListInput, ws);
+                } else if (
+                    parsedMessaged.inputType === 'GET_MESSAGES' ||
+                    parsedMessaged.inputType === 'GET_EARLIER_MESSAGES'
+                ) {
                     const getMessagesInput = parsedMessaged as GetMessagesInput;
                     await getMessages(getMessagesInput, ws);
                 }

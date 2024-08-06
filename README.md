@@ -34,7 +34,12 @@ Eventhand is designed to facilitate seamless event vendor booking. The chat feat
 
 4. **Start Server**:
    ```bash
+    # Start Development Server
     pnpm dev
+
+    # Start Server
+    pnpm build
+    pnpm start
 
 ## Usage
 

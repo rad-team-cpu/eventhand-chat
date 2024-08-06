@@ -33,6 +33,7 @@ Eventhand is designed to facilitate seamless event vendor booking. The chat feat
     CHAT_SOCKET_URL=YOUR_CHAT_SOCKET_UR
 
 4. **Start Server**:
+   ```bash
     pnpm dev
 
 ## Usage

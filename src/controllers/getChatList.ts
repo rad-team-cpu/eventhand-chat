@@ -34,8 +34,6 @@ const getChatList = async (input: GetChatListInput, ws: Socket) => {
         outputType,
     };
 
-    console.log(chatList);
-
     ws.send(JSON.stringify(output));
     console.log(`Successfully sent chat list ${senderType}:${senderId}`);
 };

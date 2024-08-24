@@ -96,8 +96,8 @@ async function seedData() {
         )
         .connect();
 
-    const userId = '667cb0663f424f61b551892a';
-    const vendorId = '667ff5df7cfc46333461187b';
+    const userId = '66bdcd9807098fd9245c6b72';
+    const vendorId = '66a1f5d736a26dc79eeca3f2';
 
     try {
         const database = client.db();

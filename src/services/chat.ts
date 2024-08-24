@@ -195,7 +195,7 @@ const findVendorChatListByVendorId = async (
                 timestamp: '$latestMessage.timestamp',
                 isImage: '$latestMessage.isImage',
                 senderId: '$userDetails._id',
-                name: {
+                senderName: {
                     $concat: [
                         '$userDetails.firstName',
                         ' ',
